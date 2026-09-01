@@ -1,0 +1,26 @@
+{
+  "name": "documind-ai",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Full-Stack RAG Document Assistant using Google Gemini and Supabase",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspace=@documind/shared && npm run build --workspace=@documind/api && npm run build --workspace=@documind/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run build --workspace=@documind/shared && npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prisma": "7.10.0"
+  }
+}

@@ -1,0 +1,154 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/api/src/generated/prisma"
+}
+
+model User {
+  id           String         @id @default(uuid()) @db.Uuid
+  name         String
+  email        String         @unique
+  passwordHash String         @map("password_hash")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  refreshTokens RefreshToken[]
+  documents    Document[]
+  conversations Conversation[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  @@unique([tokenHash])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+model Document {
+  id           String                 @id @default(uuid()) @db.Uuid
+  userId       String                 @db.Uuid @map("user_id")
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originalName String                 @map("original_name")
+  storageKey   String                 @map("storage_key")
+  storageProvider String              @default("cloudinary") @map("storage_provider")
+  storageAssetId String?              @map("storage_asset_id")
+  storageResourceType String          @default("image") @map("storage_resource_type")
+  storageDeliveryType String          @default("authenticated") @map("storage_delivery_type")
+  mimeType     String                 @map("mime_type")
+  sizeBytes    BigInt                 @map("size_bytes")
+  pageCount    Int?                   @map("page_count")
+  status       DocumentStatus         @default(PENDING)
+  errorCode    String?                @map("error_code")
+  createdAt    DateTime               @default(now()) @map("created_at")
+  processedAt  DateTime?              @map("processed_at")
+  chunks       DocumentChunk[]
+  conversations ConversationDocument[]
+
+  @@unique([storageProvider, storageKey])
+  @@index([userId, status])
+  @@map("documents")
+}
+
+model DocumentChunk {
+  id           String            @id @default(uuid()) @db.Uuid
+  documentId   String            @db.Uuid @map("document_id")
+  document     Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  chunkIndex   Int               @map("chunk_index")
+  content      String
+  pageStart    Int?              @map("page_start")
+  pageEnd      Int?              @map("page_end")
+  tokenCount   Int               @map("token_count")
+  embedding    Unsupported("vector(768)")?
+  contentHash  String            @map("content_hash")
+  citations    MessageCitation[]
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+  @@index([contentHash])
+  @@map("document_chunks")
+}
+
+model Conversation {
+  id        String                 @id @default(uuid()) @db.Uuid
+  userId    String                 @db.Uuid @map("user_id")
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  createdAt DateTime               @default(now()) @map("created_at")
+  updatedAt DateTime               @updatedAt @map("updated_at")
+  documents ConversationDocument[]
+  messages  Message[]
+
+  @@index([userId, updatedAt])
+  @@map("conversations")
+}
+
+model ConversationDocument {
+  conversationId String       @db.Uuid @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  documentId     String       @db.Uuid @map("document_id")
+  document       Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, documentId])
+  @@map("conversation_documents")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum MessageStatus {
+  STREAMING
+  COMPLETED
+  FAILED
+}
+
+model Message {
+  id             String            @id @default(uuid()) @db.Uuid
+  conversationId String            @db.Uuid @map("conversation_id")
+  conversation   Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  status         MessageStatus     @default(COMPLETED)
+  promptTokens   Int?              @map("prompt_tokens")
+  completionTokens Int?            @map("completion_tokens")
+  latencyMs      Int?              @map("latency_ms")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  citations      MessageCitation[]
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model MessageCitation {
+  id              String        @id @default(uuid()) @db.Uuid
+  messageId       String        @db.Uuid @map("message_id")
+  message         Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  chunkId         String        @db.Uuid @map("chunk_id")
+  chunk           DocumentChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  citationNumber  Int           @map("citation_number")
+  excerpt         String
+  similarityScore Decimal?      @map("similarity_score") @db.Decimal(5, 4)
+
+  @@unique([messageId, citationNumber])
+  @@index([chunkId])
+  @@map("message_citations")
+}
