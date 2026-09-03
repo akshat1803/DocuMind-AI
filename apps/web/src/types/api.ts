@@ -51,5 +51,6 @@ export interface ConversationSummary {
   title: string;
   createdAt: string;
   updatedAt: string;
+  documents: Array<{ document: { id: string; originalName: string } }>;
   _count: { messages: number; documents: number };
 }

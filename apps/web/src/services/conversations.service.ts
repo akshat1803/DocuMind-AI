@@ -35,7 +35,11 @@ async function streamMessage(conversationId: string, question: string, callbacks
 
 export const conversationsService = {
   create: (documentIds: string[]) => request<{ conversation: { id: string } }>('/api/v1/conversations', { method: 'POST', body: JSON.stringify({ documentIds }) }),
-  list: () => request<{ conversations: ConversationSummary[] }>('/api/v1/conversations'),
+  list: (documentIds?: string[]) => {
+    const selected = documentIds ? [...new Set(documentIds)].sort() : [];
+    const query = selected.length > 0 ? `?documentIds=${encodeURIComponent(selected.join(','))}` : '';
+    return request<{ conversations: ConversationSummary[] }>(`/api/v1/conversations${query}`);
+  },
   get: (conversationId: string) => request<{ conversation: ConversationDetail }>(`/api/v1/conversations/${conversationId}`),
   remove: (conversationId: string) => request<void>(`/api/v1/conversations/${conversationId}`, { method: 'DELETE' }),
   streamMessage,

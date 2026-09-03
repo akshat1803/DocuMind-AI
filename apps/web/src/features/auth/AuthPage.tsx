@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { FileSearch, ShieldCheck, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, FileSearch, ShieldCheck, Sparkles } from 'lucide-react';
 import { LoginInputSchema, RegisterInputSchema, type LoginInput, type RegisterInput } from '@documind/shared';
 import { useAuth } from '@/context/AuthContext';
 
@@ -12,6 +12,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
   const auth = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<FormInput>();
   const isRegister = mode === 'register';
 
@@ -59,7 +60,23 @@ export default function AuthPage({ mode }: AuthPageProps) {
           <div className="mt-8 space-y-5">
             {isRegister && <label className="block text-sm font-medium">Name<input {...register('name')} autoComplete="name" className="field" placeholder="Your name" /><span className="field-error">{errors.name?.message}</span></label>}
             <label className="block text-sm font-medium">Email<input {...register('email')} type="email" autoComplete="email" className="field" placeholder="you@example.com" /><span className="field-error">{errors.email?.message}</span></label>
-            <label className="block text-sm font-medium">Password<input {...register('password')} type="password" autoComplete={isRegister ? 'new-password' : 'current-password'} className="field" placeholder="••••••••" /><span className="field-error">{errors.password?.message}</span></label>
+            <label className="block text-sm font-medium">
+              Password
+              <div className="relative">
+                <input {...register('password')} type={showPassword ? 'text' : 'password'} autoComplete={isRegister ? 'new-password' : 'current-password'} className="field pr-12" placeholder="••••••••" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  className="absolute right-3 top-1/2 mt-1 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <span className="field-error">{errors.password?.message}</span>
+            </label>
           </div>
           {serverError && <p className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{serverError}</p>}
           <button disabled={isSubmitting} className="mt-7 w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50">{isSubmitting ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}</button>

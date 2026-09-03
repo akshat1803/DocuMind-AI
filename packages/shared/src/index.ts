@@ -14,8 +14,10 @@ export const LoginInputSchema = z.object({
 export type RegisterInput = z.infer<typeof RegisterInputSchema>;
 export type LoginInput = z.infer<typeof LoginInputSchema>;
 
+export const DocumentSelectionSchema = z.array(z.string().uuid()).min(1).max(10);
+
 export const CreateConversationInputSchema = z.object({
-  documentIds: z.array(z.string().uuid()).min(1).max(10),
+  documentIds: DocumentSelectionSchema,
 });
 
 export const AskQuestionInputSchema = z.object({

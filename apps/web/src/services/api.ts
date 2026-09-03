@@ -1,6 +1,12 @@
 let accessToken: string | null = null;
 let refreshPromise: Promise<void> | null = null;
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? '';
+
+function apiUrl(path: string): string {
+  return `${API_BASE_URL}${path}`;
+}
+
 export const AUTH_EXPIRED_EVENT = 'documind:auth-expired';
 
 export class ApiError extends Error {
@@ -15,7 +21,7 @@ export function setAccessToken(token: string | null): void {
 
 async function renewAccessToken(): Promise<void> {
   refreshPromise ??= (async () => {
-    const response = await fetch('/api/v1/auth/refresh', {
+    const response = await fetch(apiUrl('/api/v1/auth/refresh'), {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', credentials: 'include',
     });
     if (!response.ok) throw new Error('SESSION_EXPIRED');
@@ -46,7 +52,7 @@ export async function authorizedFetch(path: string, options: RequestInit = {}): 
     const headers = new Headers(options.headers);
     if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
     if (options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
-    return fetch(path, { ...options, headers, credentials: 'include' });
+    return fetch(apiUrl(path), { ...options, headers, credentials: 'include' });
   };
 
   let response = await send();

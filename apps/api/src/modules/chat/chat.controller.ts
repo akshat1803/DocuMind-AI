@@ -1,5 +1,5 @@
 import { NextFunction, Request, RequestHandler, Response, Router } from 'express';
-import { AskQuestionInputSchema, CreateConversationInputSchema, RenameConversationInputSchema } from '@documind/shared';
+import { AskQuestionInputSchema, CreateConversationInputSchema, DocumentSelectionSchema, RenameConversationInputSchema } from '@documind/shared';
 import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 import { prisma } from '../../shared/db.js';
 import { aiService } from '../ai/ai.service.js';
@@ -26,9 +26,43 @@ router.post('/', asyncRoute(async (req, res) => {
 }));
 
 router.get('/', asyncRoute(async (req, res) => {
+  let documentIds: string[] | undefined;
+  if (req.query.documentIds !== undefined) {
+    if (typeof req.query.documentIds !== 'string') {
+      return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Document filter is invalid.' } });
+    }
+    const values = [...new Set(req.query.documentIds.split(',').map((value) => value.trim()).filter(Boolean))];
+    const parsed = DocumentSelectionSchema.safeParse(values);
+    if (!parsed.success) {
+      return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Select between 1 and 10 valid documents.' } });
+    }
+    const ownedCount = await prisma.document.count({ where: { id: { in: parsed.data }, userId: req.userId } });
+    if (ownedCount !== parsed.data.length) {
+      return res.status(403).json({ error: { code: 'DOCUMENT_ACCESS_DENIED', message: 'One or more documents are unavailable.' } });
+    }
+    documentIds = parsed.data;
+  }
+
   const conversations = await prisma.conversation.findMany({
-    where: { userId: req.userId }, orderBy: { updatedAt: 'desc' },
-    select: { id: true, title: true, createdAt: true, updatedAt: true, _count: { select: { messages: true, documents: true } } },
+    where: {
+      userId: req.userId,
+      messages: { some: {} },
+      ...(documentIds ? {
+        documents: {
+          some: {},
+          every: { documentId: { in: documentIds } },
+        },
+      } : {}),
+    },
+    orderBy: { updatedAt: 'desc' },
+    select: {
+      id: true,
+      title: true,
+      createdAt: true,
+      updatedAt: true,
+      documents: { select: { document: { select: { id: true, originalName: true } } } },
+      _count: { select: { messages: true, documents: true } },
+    },
   });
   return res.json({ conversations });
 }));

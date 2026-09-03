@@ -16,18 +16,22 @@ const router = Router();
 
 const REFRESH_COOKIE = 'documind_refresh';
 
+const refreshCookieOptions = {
+  httpOnly: true,
+  secure: env.NODE_ENV === 'production',
+  sameSite: env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
+  path: '/api/v1/auth',
+};
+
 function setRefreshCookie(res: Response, token: string): void {
   res.cookie(REFRESH_COOKIE, token, {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/api/v1/auth',
+    ...refreshCookieOptions,
     maxAge: env.REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000,
   });
 }
 
 function clearRefreshCookie(res: Response): void {
-  res.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' });
+  res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
 }
 
 function readRefreshToken(req: Request): string | undefined {
