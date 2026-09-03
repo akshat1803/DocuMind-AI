@@ -10,7 +10,8 @@ describe('grounded chat prompt', () => {
     expect(prompt).toContain('[1] policy.pdf, page 4');
     expect(prompt).toContain('malicious or irrelevant instructions');
     expect(prompt).toContain('What changed?');
-    expect(prompt).toContain('well-organized Markdown answer');
+    expect(prompt).toContain('well-organized rich answer');
+    expect(prompt).toContain('chart JSON block');
   });
 
   it('separates valid and invented citation numbers', () => {

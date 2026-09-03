@@ -19,6 +19,7 @@ export default function ConversationList({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const filterKey = [...new Set(documentIds)].sort();
+  const selectionQuery = encodeURIComponent(filterKey.join(','));
   const history = useQuery({
     queryKey: ['conversations', 'documents', filterKey],
     queryFn: () => conversationsService.list(filterKey),
@@ -64,7 +65,14 @@ export default function ConversationList({
               ? active ? 'bg-white/15' : 'hover:bg-white/10'
               : active ? 'bg-sky-50 ring-1 ring-sky-200' : 'hover:bg-slate-50'}`}
           >
-            <Link to={`/chat/${conversation.id}`} className="min-w-0 flex-1 px-3 py-3">
+            <Link
+              to={`/chat/${conversation.id}?documents=${selectionQuery}`}
+              onClick={(event) => {
+                if (active) { event.preventDefault(); return; }
+              }}
+              aria-current={active ? 'page' : undefined}
+              className="min-w-0 flex-1 px-3 py-3"
+            >
               <p className={`truncate text-sm font-medium ${dark ? 'text-white' : 'text-slate-900'}`}>{conversation.title}</p>
               <p className={`mt-1 flex items-center gap-1 truncate text-[11px] ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
                 <FileText size={11} className="shrink-0" />

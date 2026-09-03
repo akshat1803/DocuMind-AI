@@ -66,6 +66,7 @@ This application does **not** train an AI model. It calls Gemini for embeddings 
 | Forms | React Hook Form + Zod | Form handling and shared validation |
 | Styling | Tailwind CSS 3 | Responsive utility-based styling |
 | Answer rendering | react-markdown + remark-gfm | Safe GitHub-flavored Markdown for structured AI answers |
+| Charts | Recharts + Zod | Validated bar, line, area, and pie visualizations generated from source-backed data |
 | UI helpers | Lucide, Sonner, clsx, tailwind-merge | Icons, toast messages, and class composition |
 | Backend | Node.js + Express 4 | REST API, upload handling, and SSE streaming |
 | API security | Helmet, CORS, express-rate-limit | Security headers, origin policy, and coarse rate limiting |
@@ -199,9 +200,12 @@ All service modules call `request()` or `authorizedFetch()` in `services/api.ts`
 - Filters the chat workspace's desktop history sidebar to conversations using only the active PDF selection.
 - Selecting one PDF shows that PDF's chats; selecting several combines their individual and shared chats while excluding unselected PDFs.
 - Preserves the active PDF selection when moving between the library and chat workspace.
+- Provides a sidebar New chat action for the current PDFs and limits the loading transition to the middle conversation panel when switching saved history.
+- Clears transient input, stream, and citation state—and aborts an active stream—when the conversation route changes.
 - Shows a temporary user bubble and assistant bubble while generation streams.
 - Parses SSE `chunk`, `done`, and `error` events.
 - Renders streamed and saved answers as GitHub-flavored Markdown, including headings, lists, tables, quotes, links, and code blocks.
+- Recognizes validated fenced `chart` JSON and renders responsive bar, line, area, or pie charts without executing model-generated code.
 - Refetches the saved conversation and history when streaming completes.
 - Renders `[n]` markers as buttons when a matching saved citation exists.
 - Displays the chosen citation excerpt in the source panel.

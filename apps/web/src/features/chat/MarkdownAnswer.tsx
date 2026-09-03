@@ -1,6 +1,10 @@
+import { Children, isValidElement, lazy, Suspense } from 'react';
 import ReactMarkdown, { defaultUrlTransform, type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Citation } from '@/types/api';
+import { parseChartSpec } from './chart-spec';
+
+const ChartBlock = lazy(() => import('./ChartBlock'));
 
 interface MarkdownAnswerProps {
   content: string;
@@ -32,10 +36,20 @@ export default function MarkdownAnswer({ content, citations = [], onCitation }: 
     table: ({ children }) => <div className="my-4 overflow-x-auto rounded-xl border border-slate-200"><table className="w-full border-collapse text-left text-sm">{children}</table></div>,
     th: ({ children }) => <th className="border-b border-slate-200 bg-white px-3 py-2 font-semibold text-slate-950">{children}</th>,
     td: ({ children }) => <td className="border-b border-slate-200 px-3 py-2 align-top last:border-b-0">{children}</td>,
-    pre: ({ children }) => <pre className="my-4 overflow-x-auto rounded-xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">{children}</pre>,
-    code: ({ className, children, ...props }) => className
-      ? <code className={className} {...props}>{children}</code>
-      : <code className="rounded bg-slate-200 px-1.5 py-0.5 text-[0.9em] text-slate-900" {...props}>{children}</code>,
+    pre: ({ children }) => {
+      const child = Children.toArray(children)[0];
+      if (isValidElement<{ className?: string }>(child) && child.props.className === 'language-chart') return <>{children}</>;
+      return <pre className="my-4 overflow-x-auto rounded-xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">{children}</pre>;
+    },
+    code: ({ className, children, ...props }) => {
+      if (className === 'language-chart') {
+        const spec = parseChartSpec(String(children).trim());
+        return spec ? <Suspense fallback={<span className="my-4 block rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-800">Rendering chart…</span>}><ChartBlock spec={spec} /></Suspense> : <span className="my-4 block rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Preparing chart data…</span>;
+      }
+      return className
+        ? <code className={className} {...props}>{children}</code>
+        : <code className="rounded bg-slate-200 px-1.5 py-0.5 text-[0.9em] text-slate-900" {...props}>{children}</code>;
+    },
     a: ({ href, children, ...props }) => {
       const citationNumber = /^citation:(\d+)$/.exec(href ?? '')?.[1];
       const citation = citationNumber ? citationByNumber.get(Number(citationNumber)) : undefined;
