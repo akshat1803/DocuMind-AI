@@ -10,17 +10,28 @@
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
     "build": "npm run build --workspace=@documind/shared && npm run build --workspace=@documind/api && npm run build --workspace=@documind/web",
-    "lint": "npm run lint --workspaces --if-present",
+    "lint": "eslint scripts eslint.config.mjs prisma.config.ts --max-warnings=0 && npm run lint --workspaces",
     "typecheck": "npm run build --workspace=@documind/shared && npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run build --workspace=@documind/shared && npm run test:tooling && npm run test --workspaces",
+    "test:tooling": "node --test scripts/lib/*.test.mjs",
+    "test:integration": "npm run build --workspace=@documind/shared && node scripts/test-integration.mjs",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build && npm run prisma:validate",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
     "prisma:migrate": "prisma migrate dev"
+  },
+  "engines": {
+    "node": "24.18.0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "prisma": "7.10.0"
+    "@eslint/js": "10.0.1",
+    "eslint": "10.10.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "16.5.0",
+    "prisma": "7.10.0",
+    "typescript-eslint": "8.69.0"
   }
 }

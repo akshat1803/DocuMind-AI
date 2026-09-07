@@ -39,10 +39,13 @@ This application does **not** train an AI model. It calls Gemini for embeddings 
 - Persistent user/assistant messages and numbered source citations.
 - React authentication, document library, document polling, conversation history, chat, and citation excerpt UI.
 - Unit and lightweight API tests with Vitest and Supertest.
+- ESLint across maintained workspaces/scripts, Node 24.18.0 pin and a combined `npm run check`.
+- Docker/Compose development configuration, an isolated migrated pgvector integration suite, and CI jobs for checks/database/container startup. Docker execution is pending verification on a Docker-capable machine.
+- Informational dependency-audit reports and Dependabot update configuration.
 
 ### Planned in `PROJECT.md`, but not currently implemented
 
-- Docker/Docker Compose and CI/CD configuration.
+- Production deployment automation, migration release orchestration and rollback procedures.
 - A durable background queue and separate ingestion worker.
 - OCR for scanned/image-only PDFs.
 - DOCX/TXT upload support.
@@ -527,7 +530,8 @@ Do not commit `.env`. Development fallback JWT strings are unsafe for production
 
 ### Prerequisites
 
-- Node.js 20 or a compatible modern Node release.
+- Node.js 24.18.0 as pinned in `.node-version`.
+- Docker with Compose v2 for the local pgvector database and container stack; see [DEVELOPMENT.md](DEVELOPMENT.md).
 - npm with workspace support.
 - PostgreSQL with the `vector` extension (a pgvector-enabled Supabase database is suitable).
 - A Gemini API key.
@@ -536,8 +540,8 @@ Do not commit `.env`. Development fallback JWT strings are unsafe for production
 ### Install and configure
 
 ```powershell
-npm install
-Copy-Item .env.example .env
+npm ci
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
 Edit `.env`, then generate the Prisma client and apply the migration:
@@ -562,6 +566,8 @@ node scripts/check-database.mjs
 ### Start development reliably
 
 Use separate terminals because each process is long-running:
+
+Build shared contracts once first with `npm run build --workspace=@documind/shared`.
 
 ```powershell
 npm run dev --workspace=@documind/shared
@@ -598,7 +604,7 @@ npm run prisma:validate
 npm run prisma:generate
 ```
 
-There is a root `lint` delegator, but no workspace currently defines a lint script or ESLint configuration.
+`npm run lint` now checks root scripts/configuration and all maintained workspaces with ESLint, TypeScript rules and React hook rules. `npm run check` runs lint, type checking, tooling/unit tests, builds and Prisma validation. `npm run test:integration` separately creates a temporary database, applies committed migrations and runs the real pgvector suite; it requires the dedicated local `TEST_DATABASE_URL` described in [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ### What the tests currently cover
 
@@ -612,7 +618,7 @@ There is a root `lint` delegator, but no workspace currently defines a lint scri
 - Browser access-token refresh/retry behavior.
 - Document polling start/stop behavior.
 
-The current tests mock external dependencies; they do not prove a live PostgreSQL, Cloudinary, or Gemini integration.
+Unit tests mock external dependencies and force dummy service configuration. Three tooling tests guard test-database selection and cleanup. Six new integration cases cover real pgvector migrations/ranking, ownership/ready filters, chunk constraints, readiness/document API queries and deletion cascades while mocking AI/storage. Local checks pass; database/container execution is pending because Docker/PostgreSQL are unavailable on this machine. No tests yet prove live Cloudinary/Gemini or browser behavior.
 
 ## 17. Security model
 
@@ -642,7 +648,7 @@ The current tests mock external dependencies; they do not prove a live PostgreSQ
 - Inspect actual file structure more deeply; a five-byte signature alone is not malware scanning.
 - Set storage quotas based on total bytes, not only row count.
 - Define account/document retention and deletion policies.
-- Add dependency scanning, automated updates, and CI security checks.
+- Triage the new informational dependency-audit reports and define blocking security policy; Dependabot update configuration is now present.
 
 ## 18. Important design decisions
 
@@ -679,7 +685,7 @@ Saving an excerpt and score with the assistant message makes the evidence used f
 9. **Deleting a source changes old evidence.** Cascades remove citations for a deleted document while assistant message text may still contain now-nonclickable `[n]` markers.
 10. **No durable generation recovery.** A disconnect aborts Gemini, but partially streamed text is not periodically saved.
 11. **Readiness is shallow for AI/storage.** It verifies the database only and merely reports Gemini as configured.
-12. **Deployment assets are absent.** There is no container, automated migration pipeline, or checked-in hosting configuration.
+12. **Production deployment remains pending.** Local container images, Compose migration startup and CI smoke checks are added; production hosting, migration release orchestration and rollback are not yet configured or verified.
 
 ## 20. How to trace and debug a feature
 
@@ -749,7 +755,7 @@ The upload controller should enqueue the document ID after persistence. A worker
 
 1. Add a durable ingestion queue, stale-job recovery, and retry policy.
 2. Add live integration tests for PostgreSQL/pgvector, Cloudinary, and Gemini behind explicit test flags.
-3. Add Docker, CI checks, and a controlled `prisma migrate deploy` release step.
+3. Verify the added Docker/CI database/container jobs, then add controlled production `prisma migrate deploy` release orchestration.
 4. Enforce production-only secret and provider configuration validation.
 5. Add conversation context or explicit standalone-question rewriting for follow-up questions.
 6. Build a small RAG evaluation set and tune chunking, result count, and similarity threshold from measurements.

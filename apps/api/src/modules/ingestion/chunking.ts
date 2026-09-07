@@ -17,7 +17,7 @@ interface PageToken {
 
 export function normalizePdfText(text: string): string {
   return text
-    .replace(/\u0000/g, '')
+    .replaceAll('\0', '')
     .replace(/([a-z])-[ \t]*\n[ \t]*([a-z])/gi, '$1$2')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')

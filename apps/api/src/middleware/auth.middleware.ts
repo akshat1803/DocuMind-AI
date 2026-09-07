@@ -30,8 +30,8 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
     const payload = verifyAccessToken(token);
     req.userId = payload.userId;
     next();
-  } catch (error: any) {
-    if (error.message === 'INVALID_ACCESS_TOKEN') {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === 'INVALID_ACCESS_TOKEN') {
       return res.status(401).json({
         error: {
           code: 'TOKEN_EXPIRED',

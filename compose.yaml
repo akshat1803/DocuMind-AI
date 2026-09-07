@@ -1,0 +1,95 @@
+name: documind
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.6-pg17-trixie
+    environment:
+      POSTGRES_USER: documind
+      POSTGRES_PASSWORD: documind_dev
+      POSTGRES_DB: documind_dev
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U documind -d documind_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  postgres-test:
+    image: pgvector/pgvector:0.8.6-pg17-trixie
+    profiles: [test]
+    environment:
+      POSTGRES_USER: documind
+      POSTGRES_PASSWORD: documind_test
+      POSTGRES_DB: documind_test
+    ports:
+      - '127.0.0.1:5433:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U documind -d documind_test']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  migrate:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    environment:
+      DATABASE_URL: postgresql://documind:documind_dev@postgres:5432/documind_dev
+      DIRECT_URL: postgresql://documind:documind_dev@postgres:5432/documind_dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runtime
+    environment:
+      # Local HTTP demo: production TLS/cookie policy belongs to the deployment phase.
+      NODE_ENV: development
+      PORT: 4000
+      WEB_ORIGIN: http://localhost:8080
+      DATABASE_URL: postgresql://documind:documind_dev@postgres:5432/documind_dev
+      JWT_ACCESS_SECRET: local-compose-access-secret-for-development-only
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-not-configured}
+      GEMINI_CHAT_MODEL: ${GEMINI_CHAT_MODEL:-gemini-3.5-flash}
+      GEMINI_EMBEDDING_MODEL: ${GEMINI_EMBEDDING_MODEL:-gemini-embedding-2}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://localhost:4000/api/v1/health/ready').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  web:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '127.0.0.1:8080:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1/']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  postgres-data:

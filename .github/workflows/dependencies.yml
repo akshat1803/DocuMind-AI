@@ -1,0 +1,33 @@
+name: Dependency report
+
+on:
+  pull_request:
+    paths: ['**/package.json', 'package-lock.json', '.github/workflows/dependencies.yml']
+  schedule:
+    - cron: '30 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # Informational until existing dependency debt is triaged; do not silently upgrade it.
+      - name: Report production dependency advisories
+        continue-on-error: true
+        run: npm audit --omit=dev --json > dependency-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit
+          path: dependency-audit.json
+          retention-days: 14

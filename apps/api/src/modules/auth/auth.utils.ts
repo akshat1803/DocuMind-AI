@@ -38,6 +38,6 @@ export function verifyAccessToken(token: string): { userId: string } {
   try {
     return jwt.verify(token, env.JWT_ACCESS_SECRET) as { userId: string };
   } catch (error) {
-    throw new Error('INVALID_ACCESS_TOKEN');
+    throw new Error('INVALID_ACCESS_TOKEN', { cause: error });
   }
 }

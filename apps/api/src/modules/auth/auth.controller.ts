@@ -238,7 +238,7 @@ router.post('/refresh', async (req: Request, res: Response) => {
     return res.status(200).json({
       accessToken: newAccessToken,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Refresh token error:', error);
     clearRefreshCookie(res);
     return res.status(401).json({

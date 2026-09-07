@@ -1,865 +1,294 @@
-# DocuMind AI — Full-Stack RAG Document Assistant
+# DocuMind AI — Product Specification and Roadmap
 
-## 1. Project overview
+Updated: 7 September 2026.
 
-DocuMind AI is a production-style web application that allows users to upload PDF documents, process them into searchable knowledge, and ask natural-language questions about their contents. The system retrieves the most relevant passages and asks a large language model (LLM) to produce an answer grounded in those passages, with clickable source citations.
+DocuMind AI lets users upload private PDFs, select documents, and ask questions answered from retrieved passages with source citations. It demonstrates full-stack engineering and practical Retrieval-Augmented Generation (RAG) using Google Gemini.
 
-This project is designed to demonstrate full-stack engineering plus practical Generative AI integration—not model training or data-science research.
+This document describes the product, current code baseline, and remaining release requirements. [PROJECT_GUIDE.md](PROJECT_GUIDE.md) explains implementation details. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) orders the remaining work and defines acceptance checks. Status reflects the current working tree, including the recently applied CI patch; it does not imply deployment or a successful hosted CI run.
 
-### Portfolio description
+## 1. Goals and audience
 
-> A secure, multi-user AI document assistant built with React, TypeScript, Node.js, PostgreSQL, pgvector and the Google Gemini API. Users can upload PDFs, ask contextual questions, stream cited answers, maintain conversation history and manage their document library.
+Students, researchers, developers, and small teams should be able to:
 
-### Primary goal
+- Find facts, dates, requirements, and explanations inside their PDFs.
+- Compare information across up to ten selected documents.
+- Read structured answers, tables, and source-backed charts when appropriate.
+- Inspect evidence and reopen saved conversations.
+- Manage private documents without exposing them to other users.
 
-Build and deploy a reliable RAG application that proves the ability to:
+The release goal is a reliable, reproducible public demo with tested data isolation, recoverable processing, useful citations, and documented limitations. Correctness, security, and reliable RAG take priority over advanced features.
 
-- Build a complete React and Node.js product.
-- Integrate the Gemini API through a Gemini-first, replaceable AI service layer.
-- Implement embeddings, vector search and Retrieval-Augmented Generation (RAG).
-- Secure user data and prevent cross-user document access.
-- Stream responses and provide verifiable citations.
-- Containerize, test, monitor and deploy an AI-powered application.
+## 2. Current implementation status
 
----
+“Implemented” means present in source. External-service behavior still needs dedicated integration and end-to-end verification.
 
-## 2. Target users and problem
-
-Students, developers, researchers and small teams often have long PDFs that are difficult to search manually. Traditional keyword search cannot reliably answer questions expressed in different words or combine information from several sections.
-
-DocuMind AI lets a user upload documents and ask questions conversationally. Every answer is generated from retrieved document passages and includes references so the user can verify it.
-
-### Example use cases
-
-- Ask questions about technical documentation.
-- Summarize selected research papers.
-- Find eligibility rules in recruitment notifications.
-- Compare information across multiple uploaded documents.
-- Extract important dates, requirements or responsibilities.
-- Create revision notes from study material.
-
----
-
-## 3. Project scope
-
-### MVP (must be completed first)
-
-- Email/password registration and login.
-- JWT access and refresh-token authentication.
-- Upload PDF files with size and type validation.
-- Extract, clean and chunk PDF text.
-- Generate embeddings for chunks.
-- Store vectors and metadata in PostgreSQL with pgvector.
-- Create conversations for one or more selected documents.
-- Ask questions using semantic retrieval and an LLM.
-- Stream generated answers to the React client.
-- Display source citations with document name, page number and excerpt.
-- Persist conversations and messages.
-- List, inspect and delete documents.
-- Isolate all documents and conversations by user.
-- Provide clear processing, empty and error states.
-- Containerize the application with Docker Compose.
-- Deploy a working public demo.
-
-### Version 2
-
-- DOCX and TXT uploads.
-- Hybrid search combining vector similarity and full-text search.
-- Reranking of retrieved chunks.
-- Background processing queue with retries.
-- Document summaries and suggested questions.
-- Shareable read-only conversations.
-- Feedback buttons for response evaluation.
-- Usage dashboard for requests, tokens, latency and cost.
-- Admin monitoring dashboard.
-
-### Version 3 / advanced AI features
-
-- Tool-calling agent for document comparison and structured extraction.
-- OCR for scanned PDFs.
-- Local-model support through Ollama.
-- Multiple LLM and embedding providers.
-- Team workspaces and role-based access control.
-- Automated RAG evaluation dataset and regression testing.
-
-### Explicitly out of scope for the MVP
-
-- Training an LLM from scratch.
-- Fine-tuning a foundation model.
-- Autonomous actions without user confirmation.
-- Image, audio or video generation.
-- Internet-wide search.
-
----
-
-## 4. Recommended technology stack
-
-| Layer | Technology | Purpose |
+| Area | Current state | Remaining release work |
 |---|---|---|
-| Frontend | React, Vite, TypeScript | Responsive single-page application |
-| UI | Tailwind CSS, shadcn/ui | Accessible reusable components |
-| State/data | TanStack Query | Server state, caching and mutations |
-| Forms | React Hook Form, Zod | Validated user input |
-| Backend | Node.js, Express.js, TypeScript | REST APIs and streaming endpoint |
-| Validation | Zod | Runtime request and environment validation |
-| Database | PostgreSQL | Users, documents, conversations and messages |
-| Vector search | pgvector | Store embeddings and perform similarity search |
-| ORM | Prisma | Typed relational database access |
-| File storage | S3-compatible object storage | Original uploaded files |
-| Gemini SDK | `@google/genai` | Official TypeScript client for Gemini APIs |
-| Chat model | Gemini 3.5 Flash | Grounded, streamed answer generation |
-| Embeddings | Gemini Embedding 2 | Convert chunks and queries into vectors |
-| Queue (V2) | BullMQ and Redis | Background ingestion jobs |
-| Testing | Vitest, Supertest, Playwright | Unit, API and end-to-end tests |
-| DevOps | Docker, Docker Compose, GitHub Actions | Reproducible setup and CI/CD |
-| Monitoring | Structured logs, OpenTelemetry/Sentry | Errors, traces and latency |
+| Foundation | TypeScript npm monorepo, React/Vite web, Express API, shared Zod schemas, ESLint, pinned Node and container setup | Verify container startup on Docker-capable infrastructure |
+| Authentication | Register/login/logout/me, in-memory access JWT, hashed opaque rotating refresh tokens, session restoration | Production configuration validation, cookie/CSRF checks, database-backed session tests |
+| Documents | Single-PDF upload, private Cloudinary storage, listing, source URL, retry, deletion, selection and polling | Durable processing, concurrency-safe quotas, lifecycle integration tests |
+| Ingestion | Page-aware extraction, normalization, overlapping chunks, Gemini embeddings, transactional persistence | Worker, retry policy, stale-job recovery and bounded resources |
+| Retrieval | Owner/document filters, 768-dimensional vectors, cosine search, HNSW index in migration | Database tests, query-plan verification and measured relevance tuning |
+| Chat | Draft UI, conversation CRUD API, selected-document history, SSE answers, persistence | Follow-up context, cancellation/failure recovery, rename UI |
+| Answers | Markdown, validated bar/line/area/pie charts, citation excerpts | Document/page metadata in citation responses, source-deletion behavior |
+| Checks | Vitest/Supertest suites, real lint, test-runner guards, isolated database suite and expanded CI | Run database/container jobs, add browser tests and RAG evaluation |
+| Operations | Liveness, database readiness, timing logs, route limits | Request IDs, structured logs, usage capture, deployment and monitoring |
 
-### Why PostgreSQL and pgvector?
+Phase 1 local verification passed real lint, type checking, 27 existing tests, three new test-runner safety tests, production builds and Prisma validation. Six PostgreSQL/pgvector integration cases and container CI checks are added but have not run locally because Docker/PostgreSQL are unavailable. Live Gemini/Cloudinary and browser behavior remain unverified. The web build still reports a bundle-size warning.
 
-They keep relational data and vectors in one system, simplify authorization-aware queries and demonstrate SQL skills. A separate managed vector database can be added later if scale requires it.
+## 3. Architecture and conventions
 
----
+Keep React/Vite + Express, PostgreSQL/pgvector, Prisma, and authenticated Cloudinary storage. A Next.js migration is not required for this roadmap. Framework or storage-provider changes are separate decisions.
 
-## 5. High-level architecture
+| Layer | Current implementation |
+|---|---|
+| Web | React 18, Vite 5, TypeScript, React Router 7 |
+| State and forms | TanStack Query 5, AuthContext, React Hook Form, Zod |
+| UI | Tailwind CSS 3, existing shared CSS utilities, Lucide, Sonner; no installed shadcn component system |
+| Answers | react-markdown, remark-gfm, Recharts with validated chart specifications |
+| API | Node.js, Express 4, TypeScript, Multer 2.x |
+| Database | PostgreSQL, pgvector, Prisma 7 and PostgreSQL adapter |
+| Private PDFs | Cloudinary authenticated assets and expiring source URLs |
+| AI | Backend-only `@google/genai`, embedding and generation interfaces |
+| Checks | ESLint 10, Vitest, Supertest, TypeScript builds, GitHub Actions unit/database/container jobs |
+| Local infrastructure | Docker Compose with pgvector, API/migration images and nginx web image |
+| Planned infrastructure | Durable ingestion worker/queue and production release pipeline |
 
 ```mermaid
-flowchart TD
-    UI["React web app"] --> API["Node.js API"]
-    API --> DB["PostgreSQL + pgvector"]
-    API --> FS["Object storage"]
-    API --> AI["Google Gemini API"]
-    API --> Q["Redis job queue - V2"]
-    Q --> W["Document worker - V2"]
-    W --> DB
-    W --> FS
-    W --> AI
+flowchart LR
+    B[React browser app] -->|REST and Bearer JWT| A[Express API]
+    A -->|SSE answer events| B
+    A --> D[(PostgreSQL and pgvector)]
+    A --> C[Private Cloudinary PDFs]
+    A --> G[Gemini embeddings and generation]
+    A --> I[Current in-process ingestion]
+    I --> D
+    I --> G
 ```
-
-### Backend modules
-
-- `auth`: registration, login, refresh, logout and password hashing.
-- `users`: profile and usage settings.
-- `documents`: upload, storage, processing status and deletion.
-- `ingestion`: extraction, cleaning, chunking and embedding.
-- `retrieval`: query embedding, filtering, vector search and ranking.
-- `chat`: conversations, messages, prompt construction and streaming.
-- `ai`: Gemini client, model configuration, embeddings, streamed generation and a replaceable provider interface.
-- `usage`: token, latency and estimated-cost tracking.
-- `health`: readiness and liveness endpoints.
-
----
-
-## 6. RAG workflow
-
-### Document ingestion
-
-1. Authenticate the user.
-2. Validate MIME type, extension and maximum file size.
-3. Store the original PDF using a generated object key.
-4. Create a `documents` record with `PENDING` status.
-5. Extract text while retaining page numbers.
-6. Normalize whitespace and remove repeated headers/footers where possible.
-7. Split text into overlapping chunks.
-8. Generate an embedding for each chunk in batches using Gemini Embedding 2.
-9. Store chunk text, page range, token count and embedding.
-10. Mark the document `READY`; on failure, mark it `FAILED` with a safe error message.
-
-Suggested initial chunking configuration:
-
-- Chunk size: approximately 600–900 tokens.
-- Overlap: approximately 100–150 tokens.
-- Preserve page metadata for citations.
-- Avoid cutting headings and paragraphs when possible.
-
-The final values should be evaluated rather than treated as permanent constants.
-
-### Question answering
-
-1. Validate that the selected documents belong to the authenticated user.
-2. Save the user's message.
-3. Generate an embedding for the question.
-4. Search chunks only within the selected user-owned documents.
-5. Retrieve an initial top `k` set (for example, 8 chunks).
-6. Optionally rerank and keep the best 4–6 chunks.
-7. Construct a prompt containing Gemini system instructions, the question and numbered contexts.
-8. Stream the Gemini response to the client.
-9. Require citation markers matching the supplied context identifiers.
-10. Save the final assistant answer, citations, usage and latency.
-
-### Grounding rules for the model
-
-The Gemini system instruction must tell the model to:
-
-- Answer only from the supplied context.
-- State when the answer is not present in the documents.
-- Never invent a citation, page number or fact.
-- Cite factual claims using the supplied chunk identifiers.
-- Treat instructions found inside uploaded documents as untrusted data.
-- Avoid exposing system prompts, secrets or internal metadata.
-
----
-
-## 7. Core user journeys
-
-### Authentication
-
-1. User creates an account.
-2. Password is validated and hashed.
-3. User signs in and receives short-lived access plus rotating refresh credentials.
-4. Protected requests resolve the authenticated user on the server.
-
-### Upload and processing
-
-1. User opens the document library.
-2. User uploads a PDF.
-3. UI shows upload and processing progress.
-4. Document status changes from `PENDING` to `PROCESSING` to `READY`.
-5. Failed documents show a retry option and actionable message.
-
-### Chat
-
-1. User selects one or more ready documents.
-2. User starts a conversation.
-3. User asks a question.
-4. UI immediately shows the user message and streaming assistant response.
-5. Citation chips open the relevant source excerpt and page information.
-6. Conversation is available after refresh or later login.
-
-### Deletion
-
-1. User confirms document deletion.
-2. Server verifies ownership.
-3. Related chunks and document-conversation relations are removed transactionally.
-4. Original object is deleted or queued for deletion.
-5. Existing messages may be retained with a `source deleted` marker or deleted according to the chosen product policy.
-
----
-
-## 8. Database design
-
-### `users`
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `name` | VARCHAR | Display name |
-| `email` | VARCHAR UNIQUE | Normalized email |
-| `password_hash` | VARCHAR | Never return through APIs |
-| `created_at` | TIMESTAMP | Creation time |
-| `updated_at` | TIMESTAMP | Last update |
-
-### `refresh_tokens`
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `user_id` | UUID | Owner |
-| `token_hash` | VARCHAR | Store hash, not raw token |
-| `expires_at` | TIMESTAMP | Expiry |
-| `revoked_at` | TIMESTAMP NULL | Rotation/logout |
-
-### `documents`
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `user_id` | UUID | Owner and authorization boundary |
-| `original_name` | VARCHAR | Sanitized display name |
-| `storage_key` | VARCHAR | Non-public object key |
-| `mime_type` | VARCHAR | Allowed type |
-| `size_bytes` | BIGINT | Quota enforcement |
-| `page_count` | INTEGER NULL | Set after extraction |
-| `status` | ENUM | `PENDING`, `PROCESSING`, `READY`, `FAILED` |
-| `error_code` | VARCHAR NULL | Safe failure category |
-| `created_at` | TIMESTAMP | Upload time |
-| `processed_at` | TIMESTAMP NULL | Completion time |
-
-### `document_chunks`
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `document_id` | UUID | Parent document |
-| `chunk_index` | INTEGER | Stable order |
-| `content` | TEXT | Retrieved context |
-| `page_start` | INTEGER NULL | Citation metadata |
-| `page_end` | INTEGER NULL | Citation metadata |
-| `token_count` | INTEGER | Context budgeting |
-| `embedding` | VECTOR(n) | Dimension matches embedding model |
-| `content_hash` | VARCHAR | Deduplication/debugging |
-
-### `conversations`
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `user_id` | UUID | Owner |
-| `title` | VARCHAR | Generated from first question |
-| `created_at` | TIMESTAMP | Creation time |
-| `updated_at` | TIMESTAMP | Sorting |
-
-### `conversation_documents`
-
-| Field | Type | Notes |
-|---|---|---|
-| `conversation_id` | UUID | Composite key |
-| `document_id` | UUID | Composite key |
-
-### `messages`
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `conversation_id` | UUID | Parent |
-| `role` | ENUM | `USER`, `ASSISTANT` |
-| `content` | TEXT | Message text |
-| `status` | ENUM | `STREAMING`, `COMPLETED`, `FAILED` |
-| `prompt_tokens` | INTEGER NULL | Usage |
-| `completion_tokens` | INTEGER NULL | Usage |
-| `latency_ms` | INTEGER NULL | Monitoring |
-| `created_at` | TIMESTAMP | Ordering |
-
-### `message_citations`
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `message_id` | UUID | Assistant message |
-| `chunk_id` | UUID | Cited source |
-| `citation_number` | INTEGER | Display order |
-| `excerpt` | TEXT | Stored cited excerpt |
-| `similarity_score` | DECIMAL | Debug/evaluation signal |
-
-### Important indexes
-
-- Unique index on normalized user email.
-- Index all ownership and foreign-key columns.
-- Composite index on `(document_id, chunk_index)`.
-- Vector index on `document_chunks.embedding` after choosing the appropriate pgvector strategy.
-- Index on `(conversation_id, created_at)`.
-- Index on `(user_id, updated_at)` for conversation listing.
-
----
-
-## 9. REST API design
-
-Base path: `/api/v1`
-
-### Authentication
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `POST` | `/auth/register` | Create account |
-| `POST` | `/auth/login` | Authenticate |
-| `POST` | `/auth/refresh` | Rotate session token |
-| `POST` | `/auth/logout` | Revoke refresh session |
-| `GET` | `/auth/me` | Current user |
-
-### Documents
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `POST` | `/documents` | Upload a PDF |
-| `GET` | `/documents` | Paginated user document list |
-| `GET` | `/documents/:documentId` | Document metadata/status |
-| `POST` | `/documents/:documentId/retry` | Retry failed ingestion |
-| `DELETE` | `/documents/:documentId` | Delete owned document |
-| `GET` | `/documents/:documentId/source` | Authorized short-lived file URL |
-
-### Conversations and chat
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `POST` | `/conversations` | Create with selected documents |
-| `GET` | `/conversations` | List conversations |
-| `GET` | `/conversations/:conversationId` | Conversation and messages |
-| `PATCH` | `/conversations/:conversationId` | Rename conversation |
-| `DELETE` | `/conversations/:conversationId` | Delete conversation |
-| `POST` | `/conversations/:conversationId/messages` | Ask and stream answer |
-| `POST` | `/messages/:messageId/feedback` | Helpful/unhelpful feedback (V2) |
-
-### System
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/health/live` | Process health |
-| `GET` | `/health/ready` | Required dependency health |
-
-### Standard error format
-
-```json
-{
-  "error": {
-    "code": "DOCUMENT_NOT_READY",
-    "message": "This document is still being processed.",
-    "requestId": "req_..."
-  }
-}
-```
-
-Never return stack traces, Gemini error bodies, prompts or secrets to the client.
-
----
-
-## 10. Suggested repository structure
 
 ```text
-documind-ai/
-├── apps/
-│   ├── web/
-│   │   └── src/
-│   │       ├── components/
-│   │       ├── features/
-│   │       ├── hooks/
-│   │       ├── lib/
-│   │       ├── pages/
-│   │       └── routes/
-│   └── api/
-│       └── src/
-│           ├── config/
-│           ├── middleware/
-│           ├── modules/
-│           │   ├── ai/
-│           │   ├── auth/
-│           │   ├── chat/
-│           │   ├── documents/
-│           │   ├── ingestion/
-│           │   └── retrieval/
-│           ├── shared/
-│           └── server.ts
-├── packages/
-│   ├── shared/
-│   └── eslint-config/
-├── prisma/
-│   ├── migrations/
-│   └── schema.prisma
-├── tests/
-├── docker-compose.yml
-├── .env.example
-├── PROJECT.md
-└── README.md
+apps/web/src/
+  context/             Authentication state
+  features/            Auth, document library, chat and answer rendering
+  lib/                 Reusable browser logic
+  services/            Typed HTTP and SSE clients
+  types/               API response types
+  App.tsx              Routes and client-side access guards
+apps/api/src/
+  config/              Environment configuration
+  middleware/          Authentication and shared request behavior
+  modules/             ai, auth, chat, documents, ingestion, retrieval
+  shared/              Database client
+  generated/prisma/    Generated code; regenerate rather than edit
+  app.ts               Middleware, routes, health and errors
+  server.ts            Process startup and shutdown
+packages/shared/       Shared Zod input schemas and types
+prisma/                Schema and SQL migrations
+scripts/               Operational helpers
+.github/workflows/     CI baseline
 ```
 
-A monorepo is recommended so shared validation schemas and types can be reused, but it should remain simple enough to explain in an interview.
+Extend feature folders and service interfaces. Use frontend `@/` imports, typed requests, shared validation where appropriate, and existing error envelopes. Express 4 async handlers must forward errors. The recreated [SKILL.md](SKILL.md) now describes this monorepo and its verification commands.
 
----
+## 4. Current product flows
 
-## 11. Frontend screens
+### Authentication
 
-### Public screens
+Registration/login return an access JWT and set an HttpOnly refresh cookie. The browser keeps the JWT in memory. Concurrent 401 responses share a refresh request; the API rotates the opaque refresh token and stores only its hash. Logout revokes the refresh session. Refresh tokens are not JWTs, and `JWT_REFRESH_SECRET` is currently unused.
 
-- Landing page with clear product demonstration.
-- Register.
-- Login.
+### PDF ingestion
 
-### Authenticated screens
+1. An authenticated user uploads one PDF through a file picker or drag-and-drop.
+2. The API checks extension, declared MIME type, size, count, and `%PDF-` signature. Defaults are 20 MB per file and 20 documents per user.
+3. Cloudinary stores the private original; the API creates a `PENDING` document and starts ingestion in process.
+4. Ingestion claims `PROCESSING`, extracts normalized page text, chunks and embeds it, then commits chunks and `READY` status transactionally. Failures produce `FAILED` and a safe error code.
+5. The library polls every five seconds while processing is pending or active. Only ready documents are selectable for chat.
 
-- Dashboard showing document and conversation counts.
-- Document library with upload area, status and actions.
-- Chat workspace with conversation sidebar, document selector and citations panel.
-- Settings/profile.
-- Usage page (V2).
+Chunking currently uses **800 whitespace-separated words with 120-word overlap**, not measured model tokens. Embeddings use 768 dimensions in batches of up to 32 with a 30-second request timeout. Content hashes are stored but do not implement an embedding cache. Scanned/image-only PDFs fail with `NO_EXTRACTABLE_TEXT`; OCR is absent.
 
-### Important UI states
+Ingestion is a fire-and-forget promise inside the API. Restarting can strand `PENDING`/`PROCESSING` records; the retry endpoint currently accepts only `FAILED` documents. Uploads and processing buffer data in memory. Durable recovery and bounded resource use are release requirements.
 
-- Drag-and-drop upload and keyboard-accessible file selection.
-- File rejected because of type or size.
-- Upload progress.
-- Document processing, ready and failed states.
-- No documents/no conversations.
-- Streaming cursor and stop-generation control.
-- Request timeout or Gemini rate limit.
-- Answer not found in selected sources.
-- Deleted/unavailable citation source.
-- Mobile responsive navigation.
+### Questions and answers
 
----
+1. Selecting 1–10 ready PDFs opens a draft; the UI creates the conversation when the first question is submitted.
+2. The API validates ownership, saves the user message and a `STREAMING` assistant message, then embeds the question.
+3. Retrieval checks selected documents are owned and ready, then restricts SQL search by user and selected IDs. It returns eight chunks by default.
+4. With no results or a top similarity score below 0.25, the API streams an insufficient-information answer. Otherwise it builds a numbered-source prompt and streams Gemini output.
+5. The server saves the answer, latency, and in-range citation markers, then emits completion. The browser refetches persisted messages.
 
-## 12. Security and privacy requirements
+Generation currently allows 2,048 output tokens. Prior conversation messages are not supplied to Gemini, so follow-ups can lose context. Chunk sizes and relevance thresholds are implementation defaults, not validated quality targets.
 
-- Hash passwords using Argon2id or bcrypt with an appropriate work factor.
-- Keep refresh credentials in secure, HTTP-only, same-site cookies where architecture permits.
-- Never store raw refresh tokens.
-- Validate every request on the server.
-- Apply rate limits to authentication, upload and chat endpoints.
-- Check ownership in database queries, not only route middleware.
-- Filter vector retrieval by authenticated user and selected document IDs.
-- Generate object-storage keys; do not trust filenames as paths.
-- Use private storage and short-lived signed URLs.
-- Enforce upload limits and inspect actual MIME type.
-- Do not send entire documents to the LLM—only selected chunks.
-- Redact sensitive values from logs.
-- Keep API keys only in environment/secret storage.
-- Use CORS, secure headers and restrictive content-security policy.
-- Define retention and deletion behavior.
-- Escape rendered content and sanitize any supported Markdown/HTML.
-- Add request IDs and audit important destructive operations.
+The prompt treats source text as untrusted and asks for source-only factual answers and citations. Marker-range validation does not prove claim support. Chart JSON is schema-validated and rendered without executing generated code; factual chart accuracy still needs evaluation.
 
-### Prompt-injection defense
+The web routes are `/login`, `/register`, `/` (document library), and `/chat/:conversationId`. Settings, usage, admin and separate dashboard/landing screens are not implemented. Conversation rename exists in the API but has no web UI.
 
-Uploaded documents are untrusted input. The prompt must separate system instructions from retrieved data and explicitly state that commands inside documents must not be followed. Tool access, if added later, must use an allowlist, strict schemas and server-side authorization. Never rely on the LLM to enforce access control.
+### Sources and deletion
 
----
+The source endpoint verifies ownership and returns a URL with a five-minute expiry. Saved citation responses contain excerpts and chunk IDs, but do not join document names and page ranges for the source panel.
 
-## 13. Reliability and cost controls
+Document deletion removes the Cloudinary asset first and then the database document. Cascades remove chunks, selected-document links, and associated citations. Existing message text remains and may contain orphaned citation markers. Cross-service deletion is not atomic; recovery and explicit “source deleted” presentation are release requirements.
 
-- Configure request timeouts and cancellation through `AbortController`.
-- Retry only transient Gemini or infrastructure failures with exponential backoff and jitter.
-- Make ingestion idempotent to prevent duplicate chunks.
-- Batch Gemini embedding requests within the account's current limits.
-- Limit question length, history length and retrieved context tokens.
-- Summarize or truncate old conversation history according to a token budget.
-- Cache embeddings by content hash when safe.
-- Enforce per-user file, storage and request quotas.
-- Record model, token use, latency and estimated cost for each generation.
-- Provide a circuit-breaker-style response when Gemini is unavailable.
-- Clean up partially stored data after terminal ingestion failure.
+## 5. Data and API contracts
 
----
+The authoritative schema is [prisma/schema.prisma](prisma/schema.prisma).
 
-## 14. Testing strategy
+| Model | Purpose and constraints |
+|---|---|
+| User | Unique normalized email and password hash |
+| RefreshToken | Unique token hash, owner, expiry and revocation |
+| Document | Owner, Cloudinary storage metadata, byte size, pages and processing state |
+| DocumentChunk | Unique document/chunk index, text, pages, approximate count, content hash, `vector(768)` |
+| Conversation | Owner, title and timestamps |
+| ConversationDocument | Composite-key document selection |
+| Message | User/assistant role, text, `STREAMING`/`COMPLETED`/`FAILED`, latency and nullable token fields |
+| MessageCitation | Chunk link, excerpt, score and unique citation number per message |
 
-### Unit tests
+Token fields exist but generation does not populate them. Changing embedding dimensions requires a coordinated schema/index migration and re-embedding. Changing embedding models can require re-embedding even when dimensions stay the same.
 
-- Text cleaning and chunk boundaries.
-- Token-budget calculation.
-- Citation parsing and validation.
-- Prompt construction.
-- Authorization helpers.
-- Cost calculation.
-- Gemini service adapter using mocked responses.
+All paths below use `/api/v1`. Preserve payloads unless a documented migration changes them.
 
-### Integration tests
+| Area | Existing endpoints |
+|---|---|
+| Health | `GET /health/live`, `GET /health/ready` |
+| Authentication | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`; `GET /auth/me` |
+| Documents | `POST /documents`, `GET /documents`, `GET /documents/:documentId`, `DELETE /documents/:documentId` |
+| Document actions | `POST /documents/:documentId/retry`, `GET /documents/:documentId/source` |
+| Conversations | `POST /conversations`, `GET /conversations`; `GET`, `PATCH`, `DELETE /conversations/:conversationId` |
+| Chat | `POST /conversations/:conversationId/messages` with `{ question }` |
 
-- Register, login, refresh and logout.
-- Upload validation and document lifecycle.
-- Database writes during ingestion.
-- Vector retrieval filtered by user ownership.
-- Conversation and message persistence.
-- Document deletion and cascade behavior.
-- Rate-limit and validation errors.
+Creation accepts `{ documentIds }`; rename accepts `{ title }`. Conversation listing supports a comma-separated `documentIds` filter and returns nonempty conversations whose documents are contained in that selection. Resources use their existing envelopes; there is no universal `{ success, data }` wrapper. Feedback/profile/usage endpoints are future work.
 
-### End-to-end tests
+Typical errors use `{ "error": { "code": "DOCUMENT_NOT_FOUND", "message": "Document not found." } }`; validation can add details. Request IDs are planned. Preserve the SSE events:
 
-- User registers, uploads a known test PDF and waits for readiness.
-- User asks a question and receives a cited answer.
-- Citation refers to the correct file and page.
-- A second user cannot access the first user's document or conversation.
-- Conversation remains available after reload.
+```text
+event: chunk
+data: {"text":"partial answer"}
 
-### RAG evaluation
+event: done
+data: {"messageId":"...","citations":[1],"invalidCitations":[]}
 
-Create a small test set containing documents, questions, expected answers and expected source pages. Measure:
-
-- Retrieval hit rate: whether the expected chunk/page appears in top `k`.
-- Citation correctness: whether claims are supported by cited text.
-- Groundedness: whether the answer stays within supplied context.
-- Answer relevance.
-- Refusal correctness when the answer is absent.
-- End-to-end latency and estimated cost.
-
-Do not evaluate an AI system only by manually trying a few questions.
-
----
-
-## 15. Logging and observability
-
-Log structured events without sensitive document text:
-
-- Request ID, user ID (internal identifier), route and status.
-- Document ingestion stage and duration.
-- Chunk count and embedding batch count.
-- Retrieval duration and anonymized scores.
-- Gemini model, tokens, latency and result status.
-- Error category and retry count.
-
-Recommended metrics:
-
-- Upload and ingestion success rate.
-- Average processing time per page.
-- Chat success/error rate.
-- p50/p95 response latency.
-- Average tokens and cost per answer.
-- Answers marked helpful/unhelpful.
-- Retrieval and citation evaluation scores.
-
----
-
-## 16. Environment variables
-
-Commit only `.env.example`, never real secrets.
-
-```dotenv
-NODE_ENV=development
-PORT=4000
-WEB_ORIGIN=http://localhost:5173
-DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/documind
-JWT_ACCESS_SECRET=replace_me
-JWT_ACCESS_EXPIRES_IN=15m
-REFRESH_TOKEN_EXPIRES_DAYS=7
-AI_PROVIDER=gemini
-GEMINI_API_KEY=replace_me
-GEMINI_CHAT_MODEL=gemini-3.5-flash
-GEMINI_EMBEDDING_MODEL=gemini-embedding-2
-GEMINI_EMBEDDING_DIMENSIONS=768
-STORAGE_ENDPOINT=
-STORAGE_REGION=
-STORAGE_BUCKET=
-STORAGE_ACCESS_KEY=
-STORAGE_SECRET_KEY=
-MAX_FILE_SIZE_MB=20
-MAX_DOCUMENTS_PER_USER=20
+event: error
+data: {"code":"CHAT_GENERATION_FAILED","message":"The answer could not be generated."}
 ```
 
-`GEMINI_API_KEY` is a backend-only secret created in Google AI Studio. Never expose it through a `VITE_` variable or commit it to Git. Model names and embedding dimensions remain configurable because Gemini models can change. The pgvector column dimension and index must match `GEMINI_EMBEDDING_DIMENSIONS`; changing it later requires re-embedding existing chunks and a database migration.
+## 6. Remaining release requirements
 
----
+### Reliable processing
 
-## 17. Local development
+- Durable dispatch and an independently restartable ingestion worker.
+- Stale-job recovery, bounded concurrency, transient-failure retries and idempotent commits.
+- Recovery between database persistence and queue publication; safe deletion during queued/active work.
+- Bounded upload/parse resources and concurrency-safe document-count/byte quotas.
+- Recoverable storage/database deletion.
 
-### Gemini implementation rules
+### Security and operations
 
-- Install and use the official `@google/genai` package in the backend only.
-- Create one configured Gemini client and inject it into the AI service.
-- Use `generateContentStream` for chat so the API can forward incremental text to React.
-- Use the Gemini embedding endpoint for both stored document chunks and user questions.
-- Apply the same embedding model, output dimension and normalization strategy to documents and queries.
-- Keep retrieval, prompt construction and citation validation in our backend rather than relying on a hosted black-box document chat.
-- Send only the retrieved chunks required for the current answer, not the complete PDF.
-- Record the configured Gemini model with each assistant message for reproducibility.
-- Validate structured model output where it is used; never trust generated JSON without schema validation.
-- Map Gemini safety blocks, rate limits and temporary failures to safe application error codes.
+- Reject weak/default production signing secrets and incomplete storage configuration at startup.
+- Define allowed origins and CSRF protection for cookie-based refresh/logout, tested in the deployed topology.
+- Validate identifiers and map malformed upload/input failures to safe 4xx responses.
+- Add request IDs, redacted structured logs, appropriate rate limits and retention/deletion policy.
+- Capture model identity, actual reported usage, latency and failures; unknown usage must not become zero cost.
+- Keep credentials server-side and avoid logging documents, prompts, tokens or signed URLs.
 
-The MVP uses `gemini-3.5-flash` for answers and `gemini-embedding-2` for embeddings. Both are configuration defaults, not hard-coded throughout the application. Ollama can be introduced later by implementing the same internal AI interface without changing document, retrieval or chat modules.
+### Chat and evidence
 
-Expected developer workflow:
+- Bounded follow-up context or question rewriting while retaining source-only grounding.
+- Citation document/page metadata and owner-authorized source links.
+- Deleted-source display and explicit removal/retention rules for source-derived excerpts.
+- Overall generation timeout, cancellation handling, stale-message recovery and duplicate-submission protection.
+- Rename UI and keyboard/mobile/error-state verification.
+
+### Verification and delivery
+
+- Run the added PostgreSQL/pgvector suite and container smoke checks in CI; real workspace linting now passes locally.
+- Playwright coverage for sessions, PDF-to-answer flow, persistence and two-user isolation.
+- Versioned RAG evaluation before retrieval tuning or embedding-model changes.
+- Verify added development containers; implement controlled production migrations, staging checks, monitoring and rollback procedures.
+- Public demo and README with measured results and honest limitations.
+
+## 7. Configuration and local development
+
+Use Node **24.18.0**, pinned in `.node-version`, package engines, CI and Node container images. This matches local verification and installed Prisma's compatibility range.
+
+Copy [.env.example](.env.example) to `.env` only if no local `.env` exists, then supply development credentials. Never commit secrets.
+
+| Configuration | Current meaning |
+|---|---|
+| `DATABASE_URL` | Runtime PostgreSQL connection with pgvector available |
+| `DIRECT_URL` | Optional direct connection preferred by Prisma migration configuration |
+| `JWT_ACCESS_SECRET` | Signing secret; production validation needs hardening |
+| `JWT_ACCESS_EXPIRES_IN`, `REFRESH_TOKEN_EXPIRES_DAYS` | Defaults: 15 minutes and 7 days |
+| `GEMINI_API_KEY` | Backend-only Gemini credential |
+| `GEMINI_CHAT_MODEL`, `GEMINI_EMBEDDING_MODEL` | Repository defaults: `gemini-3.5-flash`, `gemini-embedding-2`; verify account availability before deployment |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Required for functioning document operations |
+| `NODE_ENV`, `PORT`, `WEB_ORIGIN` | Runtime mode, API port (4000), allowed browser origin |
+| `VITE_API_URL` | Web API origin; empty locally uses Vite's `/api` proxy |
+| `MAX_FILE_SIZE_MB`, `MAX_DOCUMENTS_PER_USER` | Defaults: 20 MB and 20 documents |
+| `JWT_REFRESH_SECRET`, `STORAGE_DIR` | Present but unused |
+
+Embedding dimensions are a code/schema constant, not an implemented environment setting. There is no active S3 or local-filesystem provider.
+
+Against an isolated development database:
 
 ```bash
-git clone <repository-url>
-cd documind-ai
-cp .env.example .env
-docker compose up -d postgres
-npm install
-npm run db:migrate
-npm run dev
+npm ci
+npm run prisma:generate
+npm run prisma:migrate
+npm run build --workspace=@documind/shared
 ```
 
-Target quality commands:
+`prisma:migrate` creates/applies development migrations. Use `npx prisma migrate deploy` for reviewed existing migrations in staging/production. `node scripts/check-database.mjs` diagnoses the configured database when needed.
+
+Start these long-running processes in separate terminals:
 
 ```bash
-npm run lint
-npm run typecheck
-npm run test
-npm run test:e2e
-npm run build
+npm run dev --workspace=@documind/shared
+npm run dev --workspace=@documind/api
+npm run dev --workspace=@documind/web
 ```
 
-The final repository README should include prerequisites, screenshots, architecture, local setup, environment variables, test commands, deployment link and a short demo video.
+Open `http://localhost:5173`; the API defaults to port 4000. Separate terminals avoid relying on the root workspace delegator to run long-lived processes concurrently.
 
----
+```bash
+npm run check
+```
 
-## 18. CI/CD and deployment
+This runs real lint, type checking, tooling/unit tests, builds and Prisma validation. Generate Prisma first on a clean checkout. Tests build the shared package before running. See [DEVELOPMENT.md](DEVELOPMENT.md) for `compose.yaml` and `npm run test:integration`, which requires an explicit dedicated local `TEST_DATABASE_URL`. There is no `test:e2e` or `db:migrate` script yet.
 
-### Pull-request pipeline
+## 8. CI and release acceptance
 
-1. Install locked dependencies.
-2. Lint.
-3. Type-check.
-4. Run unit and integration tests.
-5. Build frontend and backend.
-6. Optionally scan dependencies and container images.
+The expanded [.github/workflows/ci.yml](.github/workflows/ci.yml) runs checks, isolated migrated pgvector integration tests, and container startup/SPA/API-proxy smoke checks in independent jobs on pull requests and pushes to `main`. Provider calls are mocked in integration tests. A separate dependency workflow publishes informational audit reports, and Dependabot proposes updates. Hosted runs are not yet verified. Automated production deployment is absent; readiness checks the database and reports Gemini as configured without probing it.
 
-### Production deployment
+Release acceptance requires evidence for every item:
 
-- Build immutable web/API images or platform builds.
-- Store secrets in the deployment platform, never in GitHub.
-- Run database migrations as a controlled deployment step.
-- Deploy API and web application.
-- Check readiness endpoint.
-- Run a lightweight post-deployment smoke test.
-- Keep a rollback path for application releases and migrations.
+- [ ] Clean checkout installs, generates Prisma, migrates a fresh database and starts from documented commands.
+- [ ] CI runs real lint, type checks, unit tests, database integration tests and production builds.
+- [ ] Users can register, restore sessions and log out; invalid/replayed refresh sessions fail safely.
+- [ ] Valid PDFs reach `READY`; invalid inputs fail clearly; interrupted ingestion recovers.
+- [ ] Concurrent uploads/retries cannot bypass quotas or duplicate chunks.
+- [ ] Users receive streamed saved answers and can inspect correct source documents/pages.
+- [ ] Follow-ups preserve bounded context; insufficient evidence produces a clear fallback.
+- [ ] A second user cannot access another user's files, sources, chats, citations or retrieved chunks.
+- [ ] Deletion removes private source data according to policy and leaves understandable chat history.
+- [ ] Disconnects, failures and restarts cannot leave indefinitely streaming messages without recovery.
+- [ ] Browser tests and a versioned RAG evaluation report demonstrate the core behavior.
+- [ ] Production configuration, monitoring, migrations and rollback are tested in staging.
+- [ ] A public demo and README include measured results and known limitations.
 
-Possible hosting choices include a managed frontend, container platform, managed PostgreSQL with pgvector and S3-compatible object storage. Select providers based on current pricing and availability when implementation reaches deployment.
+Unchecked items are release gates, not claims that the underlying features are entirely absent.
 
----
+## 9. Delivery order and future scope
 
-## 19. Development milestones
+The detailed [implementation plan](IMPLEMENTATION_PLAN.md) follows this order:
 
-### Milestone 1 — Foundation
+1. Effective quality checks and reproducible setup.
+2. Production configuration and request/session boundaries.
+3. Durable ingestion and deletion recovery.
+4. Citation provenance and follow-up chat.
+5. Usage capture and operational visibility.
+6. Browser tests and measured RAG quality.
+7. Staging, deployment and portfolio delivery.
 
-- Initialize monorepo, TypeScript, linting and formatting.
-- Create React shell and Express API.
-- Add environment validation and Docker Compose database.
-- Configure Prisma and initial migrations.
-- Add health endpoints and CI checks.
+Durable ingestion and baseline RAG evaluation move into release requirements because they address current reliability and quality gaps. After release, consider OCR, DOCX/TXT, hybrid retrieval/reranking, summaries, feedback, usage/settings/admin screens, sharing, alternate providers and team workspaces.
 
-**Done when:** web/API run locally, database migrations succeed and CI is green.
-
-### Milestone 2 — Authentication
-
-- Registration and login.
-- Password hashing.
-- Access/refresh credential flow.
-- Protected routes and logout.
-- Authentication tests.
-
-**Done when:** a user can securely create, restore and end a session.
-
-### Milestone 3 — Document library
-
-- Upload endpoint and UI.
-- File validation and private object storage.
-- Document listing, status and deletion.
-- Ownership tests.
-
-**Done when:** each user can manage only their own uploaded PDFs.
-
-### Milestone 4 — Ingestion and vector search
-
-- PDF extraction with page metadata.
-- Cleaning and chunking.
-- Gemini embedding service adapter.
-- pgvector storage and similarity search.
-- Failure handling and retry.
-
-**Done when:** a test query retrieves the correct passage from a known PDF.
-
-### Milestone 5 — Cited AI chat
-
-- Conversation and message APIs.
-- RAG prompt construction.
-- Streaming response.
-- Citation validation and source panel.
-- Conversation history.
-
-**Done when:** a user receives a grounded, saved answer with working citations.
-
-### Milestone 6 — Production quality
-
-- Rate limiting and quotas.
-- Cancellation, retries and timeouts.
-- Structured logs and usage tracking.
-- End-to-end security and RAG evaluation tests.
-- Accessibility and responsive UI review.
-
-**Done when:** core flows are tested and common failure states are handled.
-
-### Milestone 7 — Deployment and portfolio
-
-- Deploy application and database.
-- Configure storage, secrets and monitoring.
-- Run smoke tests.
-- Add screenshots, architecture and demo video.
-- Document known limitations and future improvements.
-
-**Done when:** recruiters can open the demo and understand the implementation from GitHub.
-
----
-
-## 20. MVP acceptance criteria
-
-The MVP is complete only when all of the following are true:
-
-- A new user can register, log in and log out.
-- A user can upload a valid PDF and see its processing status.
-- Invalid or oversized files are rejected safely.
-- Text is chunked with page metadata and stored with embeddings.
-- A user can select documents and ask a question.
-- The answer streams and is stored after completion.
-- Answers contain valid citations linked to retrieved excerpts/pages.
-- The assistant clearly says when the documents do not contain the answer.
-- One user cannot retrieve another user's data, even with guessed IDs.
-- Document deletion removes or schedules removal of associated private data.
-- Automated tests cover authentication, isolation, ingestion and cited chat.
-- The project runs locally from documented commands.
-- CI passes and a public demo is deployed.
-
----
-
-## 21. GitHub issue backlog
-
-Create issues in roughly this order:
-
-1. Scaffold monorepo and shared configuration.
-2. Configure PostgreSQL, pgvector and Prisma.
-3. Implement health checks and environment validation.
-4. Implement authentication schema and APIs.
-5. Build registration/login UI.
-6. Add private PDF upload and validation.
-7. Build document library and processing states.
-8. Implement PDF extraction and page-aware chunking.
-9. Create the Gemini-first AI interface and client.
-10. Store embeddings and implement owner-filtered vector search.
-11. Add conversations and selected-document relations.
-12. Implement Gemini system instructions and streamed RAG chat service.
-13. Stream assistant responses.
-14. Parse, validate and display citations.
-15. Add conversation history and deletion.
-16. Add rate limits, quotas, timeouts and cancellation.
-17. Add structured usage and error logging.
-18. Create retrieval and grounded-answer evaluation dataset.
-19. Add API and end-to-end security tests.
-20. Configure CI/CD and deploy.
-21. Add screenshots, demo video and final README.
-
----
-
-## 22. Interview talking points
-
-Be ready to explain:
-
-- Why RAG was chosen instead of fine-tuning.
-- How chunk size and overlap affect retrieval.
-- Why page metadata must survive extraction and chunking.
-- How cosine similarity/vector search retrieves relevant text.
-- How retrieval is restricted to the authenticated user's documents.
-- How citations are generated and checked.
-- What happens when no relevant context is found.
-- How prompt injection from documents is handled.
-- How streaming works between the API and React.
-- How token budgets, cost, latency and rate limits are controlled.
-- How you would scale ingestion using background workers.
-- How RAG quality is evaluated beyond subjective testing.
-
----
-
-## 23. Resume content after completion
-
-### Project entry
-
-**DocuMind AI — Generative AI Document Assistant**  
-React.js, TypeScript, Node.js, Express.js, PostgreSQL, pgvector, Google Gemini API, Docker
-
-- Built and deployed a multi-user AI document assistant that processes PDFs and generates context-grounded answers using Retrieval-Augmented Generation (RAG).
-- Implemented page-aware text chunking, embeddings and authorization-filtered vector search with PostgreSQL and pgvector, returning verifiable source citations with responses.
-- Developed streaming AI chat, persistent conversation history, secure JWT authentication, private file storage and user-level document isolation.
-- Containerized the application and added automated unit, API and end-to-end tests with CI/CD, structured error handling and LLM usage monitoring.
-
-Replace or strengthen these bullets with honest measured results after testing, such as retrieval hit rate, p95 latency, number of evaluation questions or deployment uptime. Never invent metrics.
-
-### Skills that can be claimed after implementation
-
-- Generative AI and Google Gemini API integration.
-- Prompt engineering and structured outputs.
-- Retrieval-Augmented Generation (RAG).
-- Embeddings, semantic search and pgvector.
-- Streaming AI responses.
-- Citation validation and LLM evaluation.
-- Prompt-injection mitigation.
-- Token, cost and latency monitoring.
-
----
-
-## 24. Definition of success
-
-This project succeeds when it is more than an attractive chatbot interface. A recruiter should be able to see that it has:
-
-- A real ingestion and retrieval pipeline.
-- Grounded answers with verifiable citations.
-- Authentication and strict multi-user data isolation.
-- Tests for normal, failure and security cases.
-- Observable performance and usage.
-- Reproducible local setup and automated deployment.
-- Clear engineering decisions that the developer can defend in an interview.
-
-The priority order is: **correctness and security → working RAG → user experience → advanced agent features**.
+LLM training, fine-tuning, internet-wide search, autonomous external actions, and image/audio/video generation remain out of scope. Portfolio claims about deployment, monitoring, quality or performance require corresponding implementation and measurements.
