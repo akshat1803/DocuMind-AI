@@ -1,6 +1,6 @@
-import { type DragEvent, useEffect, useRef, useState } from 'react';
+import { type DragEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, ExternalLink, Files, FileText, LogOut, MessageSquarePlus, Plus, RotateCcw, Trash2, UploadCloud } from 'lucide-react';
+import { BookOpenCheck, Check, ExternalLink, Files, FileText, LogOut, MessageSquarePlus, Plus, RotateCcw, Search, Trash2, UploadCloud, FileEdit } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -8,6 +8,8 @@ import { documentsService } from '@/services/documents.service';
 import { ApiError } from '@/services/api';
 import { getDocumentRefetchInterval } from '@/lib/document-polling';
 import { createDraftChatUrl } from '@/lib/chat-route';
+import ThemeToggle from '@/features/common/ThemeToggle';
+import NotesDrawer from '@/features/study/NotesDrawer';
 
 const statusStyles = {
   PENDING: 'bg-amber-50 text-amber-700 ring-amber-600/20',
@@ -23,6 +25,10 @@ export default function DocumentLibrary() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isDragging, setIsDragging] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'READY' | 'PROCESSING' | 'FAILED'>('ALL');
+  const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
   const [selected, setSelected] = useState<Set<string>>(() => new Set(
     (searchParams.get('documents') ?? '').split(',').map((value) => value.trim()).filter(Boolean),
   ));
@@ -114,7 +120,21 @@ export default function DocumentLibrary() {
     });
   }
 
-  const items = documents.data?.documents ?? [];
+  const items = useMemo(() => {
+    let result = documents.data?.documents ?? [];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((doc) => doc.originalName.toLowerCase().includes(q));
+    }
+    if (statusFilter !== 'ALL') {
+      result = result.filter((doc) => doc.status === statusFilter);
+    }
+    return [...result].sort((a, b) => {
+      if (sortBy === 'name') return a.originalName.localeCompare(b.originalName);
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [documents.data?.documents, searchQuery, statusFilter, sortBy]);
+
   useEffect(() => {
     if (!documents.data) return;
     const readyIds = new Set(documents.data.documents.filter((document) => document.status === 'READY').map((document) => document.id));
@@ -124,23 +144,33 @@ export default function DocumentLibrary() {
     });
   }, [documents.data]);
   return (
-    <main className="min-h-screen bg-[#f7f8fa] text-slate-950">
-      <header className="border-b border-slate-200 bg-white">
+    <main className="min-h-screen bg-canvas text-ink">
+      <header className="border-b border-ink/10 bg-paper">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3 font-semibold"><span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-950 text-white"><Files size={18} /></span>DocuMind AI</div>
-          <div className="flex items-center gap-4"><span className="hidden text-sm text-slate-500 sm:inline">{user?.email}</span><button onClick={() => void logout()} className="icon-button" aria-label="Sign out"><LogOut size={18} /></button></div>
+          <div className="flex items-center gap-3 font-semibold">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-600 text-white"><Files size={18} /></span>DocuMind
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-xs text-ink-muted sm:inline">{user?.email}</span>
+            <ThemeToggle />
+            <button onClick={() => setNotesOpen(true)} className="icon-button" aria-label="Open notes" title="Personal notes"><FileEdit size={18} /></button>
+            <button onClick={() => navigate('/study')} className="icon-button" aria-label="Open study workspace" title="Study workspace"><BookOpenCheck size={18} /></button>
+            <button onClick={() => void logout()} className="icon-button" aria-label="Sign out" title="Sign out"><LogOut size={18} /></button>
+          </div>
         </div>
       </header>
 
+      <NotesDrawer open={notesOpen} onOpenChange={setNotesOpen} />
+
       <section className="mx-auto max-w-6xl px-6 py-10">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-          <div><p className="text-sm font-semibold text-sky-700">Your knowledge base</p><h1 className="mt-1 text-3xl font-semibold tracking-tight">Document library</h1><p className="mt-2 text-sm text-slate-500">Select one or more ready PDFs, then start a grounded chat.</p></div>
+          <div><p className="text-sm font-semibold text-violet-700">Your study and research space</p><h1 className="mt-1 font-display text-4xl tracking-tight">Document library</h1><p className="mt-2 text-sm text-ink-muted">Select one or more ready PDFs, then ask a source-grounded question.</p></div>
           <input ref={inputRef} className="hidden" type="file" accept="application/pdf,.pdf" onChange={(event) => { uploadFiles(event.target.files); event.target.value = ''; }} />
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => startChat([...selected])}
               disabled={selected.size === 0}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="secondary-button inline-flex items-center justify-center gap-2 px-5 py-3 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <MessageSquarePlus size={17} />
               {`Chat with selected${selected.size > 0 ? ` (${selected.size})` : ''}`}
@@ -149,8 +179,42 @@ export default function DocumentLibrary() {
           </div>
         </div>
 
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="relative min-w-[240px] flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted" size={16} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search documents..."
+              className="field !mt-0 pl-10"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex rounded-xl border border-ink/10 bg-paper p-1 text-xs">
+              {(['ALL', 'READY', 'PROCESSING', 'FAILED'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`rounded-lg px-3 py-1.5 font-medium transition ${statusFilter === status ? 'bg-violet-100 text-violet-800' : 'text-ink-muted hover:text-ink'}`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'date' | 'name')}
+              className="rounded-xl border border-ink/10 bg-paper px-3 py-2 text-xs font-medium text-ink outline-none"
+            >
+              <option value="date">Sort by Date</option>
+              <option value="name">Sort by Name</option>
+            </select>
+          </div>
+        </div>
+
         <div
-          className={`relative mt-8 overflow-hidden rounded-2xl border bg-white shadow-sm transition ${isDragging ? 'border-sky-500 ring-4 ring-sky-100' : 'border-slate-200'}`}
+          className={`relative mt-8 overflow-hidden rounded-2xl border bg-paper shadow-card transition ${isDragging ? 'border-violet-600 ring-4 ring-violet-100' : 'border-ink/10'}`}
           onDragEnter={handleDragEnter}
           onDragOver={(event) => { event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'copy'; }}
           onDragLeave={handleDragLeave}

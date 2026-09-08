@@ -52,6 +52,8 @@ export type DocumentMinAggregateOutputType = {
   errorCode: string | null
   createdAt: Date | null
   processedAt: Date | null
+  folderId: string | null
+  favorite: boolean | null
 }
 
 export type DocumentMaxAggregateOutputType = {
@@ -70,6 +72,8 @@ export type DocumentMaxAggregateOutputType = {
   errorCode: string | null
   createdAt: Date | null
   processedAt: Date | null
+  folderId: string | null
+  favorite: boolean | null
 }
 
 export type DocumentCountAggregateOutputType = {
@@ -88,6 +92,8 @@ export type DocumentCountAggregateOutputType = {
   errorCode: number
   createdAt: number
   processedAt: number
+  folderId: number
+  favorite: number
   _all: number
 }
 
@@ -118,6 +124,8 @@ export type DocumentMinAggregateInputType = {
   errorCode?: true
   createdAt?: true
   processedAt?: true
+  folderId?: true
+  favorite?: true
 }
 
 export type DocumentMaxAggregateInputType = {
@@ -136,6 +144,8 @@ export type DocumentMaxAggregateInputType = {
   errorCode?: true
   createdAt?: true
   processedAt?: true
+  folderId?: true
+  favorite?: true
 }
 
 export type DocumentCountAggregateInputType = {
@@ -154,6 +164,8 @@ export type DocumentCountAggregateInputType = {
   errorCode?: true
   createdAt?: true
   processedAt?: true
+  folderId?: true
+  favorite?: true
   _all?: true
 }
 
@@ -259,6 +271,8 @@ export type DocumentGroupByOutputType = {
   errorCode: string | null
   createdAt: Date
   processedAt: Date | null
+  folderId: string | null
+  favorite: boolean
   _count: DocumentCountAggregateOutputType | null
   _avg: DocumentAvgAggregateOutputType | null
   _sum: DocumentSumAggregateOutputType | null
@@ -300,9 +314,16 @@ export type DocumentWhereInput = {
   errorCode?: Prisma.StringNullableFilter<"Document"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Document"> | Date | string
   processedAt?: Prisma.DateTimeNullableFilter<"Document"> | Date | string | null
+  folderId?: Prisma.UuidNullableFilter<"Document"> | string | null
+  favorite?: Prisma.BoolFilter<"Document"> | boolean
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   chunks?: Prisma.DocumentChunkListRelationFilter
   conversations?: Prisma.ConversationDocumentListRelationFilter
+  jobs?: Prisma.ProcessingJobListRelationFilter
+  artifacts?: Prisma.ArtifactSourceListRelationFilter
+  tags?: Prisma.DocumentTagListRelationFilter
+  notes?: Prisma.NoteListRelationFilter
+  folder?: Prisma.XOR<Prisma.FolderNullableScalarRelationFilter, Prisma.FolderWhereInput> | null
 }
 
 export type DocumentOrderByWithRelationInput = {
@@ -321,9 +342,16 @@ export type DocumentOrderByWithRelationInput = {
   errorCode?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   processedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  folderId?: Prisma.SortOrderInput | Prisma.SortOrder
+  favorite?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   chunks?: Prisma.DocumentChunkOrderByRelationAggregateInput
   conversations?: Prisma.ConversationDocumentOrderByRelationAggregateInput
+  jobs?: Prisma.ProcessingJobOrderByRelationAggregateInput
+  artifacts?: Prisma.ArtifactSourceOrderByRelationAggregateInput
+  tags?: Prisma.DocumentTagOrderByRelationAggregateInput
+  notes?: Prisma.NoteOrderByRelationAggregateInput
+  folder?: Prisma.FolderOrderByWithRelationInput
 }
 
 export type DocumentWhereUniqueInput = Prisma.AtLeast<{
@@ -346,9 +374,16 @@ export type DocumentWhereUniqueInput = Prisma.AtLeast<{
   errorCode?: Prisma.StringNullableFilter<"Document"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Document"> | Date | string
   processedAt?: Prisma.DateTimeNullableFilter<"Document"> | Date | string | null
+  folderId?: Prisma.UuidNullableFilter<"Document"> | string | null
+  favorite?: Prisma.BoolFilter<"Document"> | boolean
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   chunks?: Prisma.DocumentChunkListRelationFilter
   conversations?: Prisma.ConversationDocumentListRelationFilter
+  jobs?: Prisma.ProcessingJobListRelationFilter
+  artifacts?: Prisma.ArtifactSourceListRelationFilter
+  tags?: Prisma.DocumentTagListRelationFilter
+  notes?: Prisma.NoteListRelationFilter
+  folder?: Prisma.XOR<Prisma.FolderNullableScalarRelationFilter, Prisma.FolderWhereInput> | null
 }, "id" | "storageProvider_storageKey">
 
 export type DocumentOrderByWithAggregationInput = {
@@ -367,6 +402,8 @@ export type DocumentOrderByWithAggregationInput = {
   errorCode?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   processedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  folderId?: Prisma.SortOrderInput | Prisma.SortOrder
+  favorite?: Prisma.SortOrder
   _count?: Prisma.DocumentCountOrderByAggregateInput
   _avg?: Prisma.DocumentAvgOrderByAggregateInput
   _max?: Prisma.DocumentMaxOrderByAggregateInput
@@ -393,6 +430,8 @@ export type DocumentScalarWhereWithAggregatesInput = {
   errorCode?: Prisma.StringNullableWithAggregatesFilter<"Document"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Document"> | Date | string
   processedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Document"> | Date | string | null
+  folderId?: Prisma.UuidNullableWithAggregatesFilter<"Document"> | string | null
+  favorite?: Prisma.BoolWithAggregatesFilter<"Document"> | boolean
 }
 
 export type DocumentCreateInput = {
@@ -410,9 +449,15 @@ export type DocumentCreateInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  favorite?: boolean
   user: Prisma.UserCreateNestedOneWithoutDocumentsInput
   chunks?: Prisma.DocumentChunkCreateNestedManyWithoutDocumentInput
   conversations?: Prisma.ConversationDocumentCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteCreateNestedManyWithoutDocumentInput
+  folder?: Prisma.FolderCreateNestedOneWithoutDocumentsInput
 }
 
 export type DocumentUncheckedCreateInput = {
@@ -431,8 +476,14 @@ export type DocumentUncheckedCreateInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
   chunks?: Prisma.DocumentChunkUncheckedCreateNestedManyWithoutDocumentInput
   conversations?: Prisma.ConversationDocumentUncheckedCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobUncheckedCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceUncheckedCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagUncheckedCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteUncheckedCreateNestedManyWithoutDocumentInput
 }
 
 export type DocumentUpdateInput = {
@@ -450,9 +501,15 @@ export type DocumentUpdateInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutDocumentsNestedInput
   chunks?: Prisma.DocumentChunkUpdateManyWithoutDocumentNestedInput
   conversations?: Prisma.ConversationDocumentUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUpdateManyWithoutDocumentNestedInput
+  folder?: Prisma.FolderUpdateOneWithoutDocumentsNestedInput
 }
 
 export type DocumentUncheckedUpdateInput = {
@@ -471,8 +528,14 @@ export type DocumentUncheckedUpdateInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
   chunks?: Prisma.DocumentChunkUncheckedUpdateManyWithoutDocumentNestedInput
   conversations?: Prisma.ConversationDocumentUncheckedUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUncheckedUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUncheckedUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUncheckedUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUncheckedUpdateManyWithoutDocumentNestedInput
 }
 
 export type DocumentCreateManyInput = {
@@ -491,6 +554,8 @@ export type DocumentCreateManyInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
 }
 
 export type DocumentUpdateManyMutationInput = {
@@ -508,6 +573,7 @@ export type DocumentUpdateManyMutationInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type DocumentUncheckedUpdateManyInput = {
@@ -526,6 +592,8 @@ export type DocumentUncheckedUpdateManyInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type DocumentListRelationFilter = {
@@ -559,6 +627,8 @@ export type DocumentCountOrderByAggregateInput = {
   errorCode?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   processedAt?: Prisma.SortOrder
+  folderId?: Prisma.SortOrder
+  favorite?: Prisma.SortOrder
 }
 
 export type DocumentAvgOrderByAggregateInput = {
@@ -582,6 +652,8 @@ export type DocumentMaxOrderByAggregateInput = {
   errorCode?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   processedAt?: Prisma.SortOrder
+  folderId?: Prisma.SortOrder
+  favorite?: Prisma.SortOrder
 }
 
 export type DocumentMinOrderByAggregateInput = {
@@ -600,6 +672,8 @@ export type DocumentMinOrderByAggregateInput = {
   errorCode?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   processedAt?: Prisma.SortOrder
+  folderId?: Prisma.SortOrder
+  favorite?: Prisma.SortOrder
 }
 
 export type DocumentSumOrderByAggregateInput = {
@@ -610,6 +684,11 @@ export type DocumentSumOrderByAggregateInput = {
 export type DocumentScalarRelationFilter = {
   is?: Prisma.DocumentWhereInput
   isNot?: Prisma.DocumentWhereInput
+}
+
+export type DocumentNullableScalarRelationFilter = {
+  is?: Prisma.DocumentWhereInput | null
+  isNot?: Prisma.DocumentWhereInput | null
 }
 
 export type DocumentCreateNestedManyWithoutUserInput = {
@@ -678,6 +757,112 @@ export type EnumDocumentStatusFieldUpdateOperationsInput = {
   set?: $Enums.DocumentStatus
 }
 
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type DocumentCreateNestedOneWithoutArtifactsInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutArtifactsInput, Prisma.DocumentUncheckedCreateWithoutArtifactsInput>
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutArtifactsInput
+  connect?: Prisma.DocumentWhereUniqueInput
+}
+
+export type DocumentUpdateOneRequiredWithoutArtifactsNestedInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutArtifactsInput, Prisma.DocumentUncheckedCreateWithoutArtifactsInput>
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutArtifactsInput
+  upsert?: Prisma.DocumentUpsertWithoutArtifactsInput
+  connect?: Prisma.DocumentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DocumentUpdateToOneWithWhereWithoutArtifactsInput, Prisma.DocumentUpdateWithoutArtifactsInput>, Prisma.DocumentUncheckedUpdateWithoutArtifactsInput>
+}
+
+export type DocumentCreateNestedManyWithoutFolderInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutFolderInput, Prisma.DocumentUncheckedCreateWithoutFolderInput> | Prisma.DocumentCreateWithoutFolderInput[] | Prisma.DocumentUncheckedCreateWithoutFolderInput[]
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutFolderInput | Prisma.DocumentCreateOrConnectWithoutFolderInput[]
+  createMany?: Prisma.DocumentCreateManyFolderInputEnvelope
+  connect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+}
+
+export type DocumentUncheckedCreateNestedManyWithoutFolderInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutFolderInput, Prisma.DocumentUncheckedCreateWithoutFolderInput> | Prisma.DocumentCreateWithoutFolderInput[] | Prisma.DocumentUncheckedCreateWithoutFolderInput[]
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutFolderInput | Prisma.DocumentCreateOrConnectWithoutFolderInput[]
+  createMany?: Prisma.DocumentCreateManyFolderInputEnvelope
+  connect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+}
+
+export type DocumentUpdateManyWithoutFolderNestedInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutFolderInput, Prisma.DocumentUncheckedCreateWithoutFolderInput> | Prisma.DocumentCreateWithoutFolderInput[] | Prisma.DocumentUncheckedCreateWithoutFolderInput[]
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutFolderInput | Prisma.DocumentCreateOrConnectWithoutFolderInput[]
+  upsert?: Prisma.DocumentUpsertWithWhereUniqueWithoutFolderInput | Prisma.DocumentUpsertWithWhereUniqueWithoutFolderInput[]
+  createMany?: Prisma.DocumentCreateManyFolderInputEnvelope
+  set?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  disconnect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  delete?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  connect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  update?: Prisma.DocumentUpdateWithWhereUniqueWithoutFolderInput | Prisma.DocumentUpdateWithWhereUniqueWithoutFolderInput[]
+  updateMany?: Prisma.DocumentUpdateManyWithWhereWithoutFolderInput | Prisma.DocumentUpdateManyWithWhereWithoutFolderInput[]
+  deleteMany?: Prisma.DocumentScalarWhereInput | Prisma.DocumentScalarWhereInput[]
+}
+
+export type DocumentUncheckedUpdateManyWithoutFolderNestedInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutFolderInput, Prisma.DocumentUncheckedCreateWithoutFolderInput> | Prisma.DocumentCreateWithoutFolderInput[] | Prisma.DocumentUncheckedCreateWithoutFolderInput[]
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutFolderInput | Prisma.DocumentCreateOrConnectWithoutFolderInput[]
+  upsert?: Prisma.DocumentUpsertWithWhereUniqueWithoutFolderInput | Prisma.DocumentUpsertWithWhereUniqueWithoutFolderInput[]
+  createMany?: Prisma.DocumentCreateManyFolderInputEnvelope
+  set?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  disconnect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  delete?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  connect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  update?: Prisma.DocumentUpdateWithWhereUniqueWithoutFolderInput | Prisma.DocumentUpdateWithWhereUniqueWithoutFolderInput[]
+  updateMany?: Prisma.DocumentUpdateManyWithWhereWithoutFolderInput | Prisma.DocumentUpdateManyWithWhereWithoutFolderInput[]
+  deleteMany?: Prisma.DocumentScalarWhereInput | Prisma.DocumentScalarWhereInput[]
+}
+
+export type DocumentCreateNestedOneWithoutTagsInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutTagsInput, Prisma.DocumentUncheckedCreateWithoutTagsInput>
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutTagsInput
+  connect?: Prisma.DocumentWhereUniqueInput
+}
+
+export type DocumentUpdateOneRequiredWithoutTagsNestedInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutTagsInput, Prisma.DocumentUncheckedCreateWithoutTagsInput>
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutTagsInput
+  upsert?: Prisma.DocumentUpsertWithoutTagsInput
+  connect?: Prisma.DocumentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DocumentUpdateToOneWithWhereWithoutTagsInput, Prisma.DocumentUpdateWithoutTagsInput>, Prisma.DocumentUncheckedUpdateWithoutTagsInput>
+}
+
+export type DocumentCreateNestedOneWithoutNotesInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutNotesInput, Prisma.DocumentUncheckedCreateWithoutNotesInput>
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutNotesInput
+  connect?: Prisma.DocumentWhereUniqueInput
+}
+
+export type DocumentUpdateOneWithoutNotesNestedInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutNotesInput, Prisma.DocumentUncheckedCreateWithoutNotesInput>
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutNotesInput
+  upsert?: Prisma.DocumentUpsertWithoutNotesInput
+  disconnect?: Prisma.DocumentWhereInput | boolean
+  delete?: Prisma.DocumentWhereInput | boolean
+  connect?: Prisma.DocumentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DocumentUpdateToOneWithWhereWithoutNotesInput, Prisma.DocumentUpdateWithoutNotesInput>, Prisma.DocumentUncheckedUpdateWithoutNotesInput>
+}
+
+export type DocumentCreateNestedOneWithoutJobsInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutJobsInput, Prisma.DocumentUncheckedCreateWithoutJobsInput>
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutJobsInput
+  connect?: Prisma.DocumentWhereUniqueInput
+}
+
+export type DocumentUpdateOneWithoutJobsNestedInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutJobsInput, Prisma.DocumentUncheckedCreateWithoutJobsInput>
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutJobsInput
+  upsert?: Prisma.DocumentUpsertWithoutJobsInput
+  disconnect?: Prisma.DocumentWhereInput | boolean
+  delete?: Prisma.DocumentWhereInput | boolean
+  connect?: Prisma.DocumentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DocumentUpdateToOneWithWhereWithoutJobsInput, Prisma.DocumentUpdateWithoutJobsInput>, Prisma.DocumentUncheckedUpdateWithoutJobsInput>
+}
+
 export type DocumentCreateNestedOneWithoutChunksInput = {
   create?: Prisma.XOR<Prisma.DocumentCreateWithoutChunksInput, Prisma.DocumentUncheckedCreateWithoutChunksInput>
   connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutChunksInput
@@ -721,8 +906,14 @@ export type DocumentCreateWithoutUserInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  favorite?: boolean
   chunks?: Prisma.DocumentChunkCreateNestedManyWithoutDocumentInput
   conversations?: Prisma.ConversationDocumentCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteCreateNestedManyWithoutDocumentInput
+  folder?: Prisma.FolderCreateNestedOneWithoutDocumentsInput
 }
 
 export type DocumentUncheckedCreateWithoutUserInput = {
@@ -740,8 +931,14 @@ export type DocumentUncheckedCreateWithoutUserInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
   chunks?: Prisma.DocumentChunkUncheckedCreateNestedManyWithoutDocumentInput
   conversations?: Prisma.ConversationDocumentUncheckedCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobUncheckedCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceUncheckedCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagUncheckedCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteUncheckedCreateNestedManyWithoutDocumentInput
 }
 
 export type DocumentCreateOrConnectWithoutUserInput = {
@@ -789,6 +986,548 @@ export type DocumentScalarWhereInput = {
   errorCode?: Prisma.StringNullableFilter<"Document"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Document"> | Date | string
   processedAt?: Prisma.DateTimeNullableFilter<"Document"> | Date | string | null
+  folderId?: Prisma.UuidNullableFilter<"Document"> | string | null
+  favorite?: Prisma.BoolFilter<"Document"> | boolean
+}
+
+export type DocumentCreateWithoutArtifactsInput = {
+  id?: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  favorite?: boolean
+  user: Prisma.UserCreateNestedOneWithoutDocumentsInput
+  chunks?: Prisma.DocumentChunkCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteCreateNestedManyWithoutDocumentInput
+  folder?: Prisma.FolderCreateNestedOneWithoutDocumentsInput
+}
+
+export type DocumentUncheckedCreateWithoutArtifactsInput = {
+  id?: string
+  userId: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
+  chunks?: Prisma.DocumentChunkUncheckedCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentUncheckedCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobUncheckedCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagUncheckedCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteUncheckedCreateNestedManyWithoutDocumentInput
+}
+
+export type DocumentCreateOrConnectWithoutArtifactsInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutArtifactsInput, Prisma.DocumentUncheckedCreateWithoutArtifactsInput>
+}
+
+export type DocumentUpsertWithoutArtifactsInput = {
+  update: Prisma.XOR<Prisma.DocumentUpdateWithoutArtifactsInput, Prisma.DocumentUncheckedUpdateWithoutArtifactsInput>
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutArtifactsInput, Prisma.DocumentUncheckedCreateWithoutArtifactsInput>
+  where?: Prisma.DocumentWhereInput
+}
+
+export type DocumentUpdateToOneWithWhereWithoutArtifactsInput = {
+  where?: Prisma.DocumentWhereInput
+  data: Prisma.XOR<Prisma.DocumentUpdateWithoutArtifactsInput, Prisma.DocumentUncheckedUpdateWithoutArtifactsInput>
+}
+
+export type DocumentUpdateWithoutArtifactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  user?: Prisma.UserUpdateOneRequiredWithoutDocumentsNestedInput
+  chunks?: Prisma.DocumentChunkUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUpdateManyWithoutDocumentNestedInput
+  folder?: Prisma.FolderUpdateOneWithoutDocumentsNestedInput
+}
+
+export type DocumentUncheckedUpdateWithoutArtifactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  chunks?: Prisma.DocumentChunkUncheckedUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUncheckedUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUncheckedUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUncheckedUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUncheckedUpdateManyWithoutDocumentNestedInput
+}
+
+export type DocumentCreateWithoutFolderInput = {
+  id?: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  favorite?: boolean
+  user: Prisma.UserCreateNestedOneWithoutDocumentsInput
+  chunks?: Prisma.DocumentChunkCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteCreateNestedManyWithoutDocumentInput
+}
+
+export type DocumentUncheckedCreateWithoutFolderInput = {
+  id?: string
+  userId: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  favorite?: boolean
+  chunks?: Prisma.DocumentChunkUncheckedCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentUncheckedCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobUncheckedCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceUncheckedCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagUncheckedCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteUncheckedCreateNestedManyWithoutDocumentInput
+}
+
+export type DocumentCreateOrConnectWithoutFolderInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutFolderInput, Prisma.DocumentUncheckedCreateWithoutFolderInput>
+}
+
+export type DocumentCreateManyFolderInputEnvelope = {
+  data: Prisma.DocumentCreateManyFolderInput | Prisma.DocumentCreateManyFolderInput[]
+  skipDuplicates?: boolean
+}
+
+export type DocumentUpsertWithWhereUniqueWithoutFolderInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  update: Prisma.XOR<Prisma.DocumentUpdateWithoutFolderInput, Prisma.DocumentUncheckedUpdateWithoutFolderInput>
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutFolderInput, Prisma.DocumentUncheckedCreateWithoutFolderInput>
+}
+
+export type DocumentUpdateWithWhereUniqueWithoutFolderInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  data: Prisma.XOR<Prisma.DocumentUpdateWithoutFolderInput, Prisma.DocumentUncheckedUpdateWithoutFolderInput>
+}
+
+export type DocumentUpdateManyWithWhereWithoutFolderInput = {
+  where: Prisma.DocumentScalarWhereInput
+  data: Prisma.XOR<Prisma.DocumentUpdateManyMutationInput, Prisma.DocumentUncheckedUpdateManyWithoutFolderInput>
+}
+
+export type DocumentCreateWithoutTagsInput = {
+  id?: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  favorite?: boolean
+  user: Prisma.UserCreateNestedOneWithoutDocumentsInput
+  chunks?: Prisma.DocumentChunkCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteCreateNestedManyWithoutDocumentInput
+  folder?: Prisma.FolderCreateNestedOneWithoutDocumentsInput
+}
+
+export type DocumentUncheckedCreateWithoutTagsInput = {
+  id?: string
+  userId: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
+  chunks?: Prisma.DocumentChunkUncheckedCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentUncheckedCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobUncheckedCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceUncheckedCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteUncheckedCreateNestedManyWithoutDocumentInput
+}
+
+export type DocumentCreateOrConnectWithoutTagsInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutTagsInput, Prisma.DocumentUncheckedCreateWithoutTagsInput>
+}
+
+export type DocumentUpsertWithoutTagsInput = {
+  update: Prisma.XOR<Prisma.DocumentUpdateWithoutTagsInput, Prisma.DocumentUncheckedUpdateWithoutTagsInput>
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutTagsInput, Prisma.DocumentUncheckedCreateWithoutTagsInput>
+  where?: Prisma.DocumentWhereInput
+}
+
+export type DocumentUpdateToOneWithWhereWithoutTagsInput = {
+  where?: Prisma.DocumentWhereInput
+  data: Prisma.XOR<Prisma.DocumentUpdateWithoutTagsInput, Prisma.DocumentUncheckedUpdateWithoutTagsInput>
+}
+
+export type DocumentUpdateWithoutTagsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  user?: Prisma.UserUpdateOneRequiredWithoutDocumentsNestedInput
+  chunks?: Prisma.DocumentChunkUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUpdateManyWithoutDocumentNestedInput
+  folder?: Prisma.FolderUpdateOneWithoutDocumentsNestedInput
+}
+
+export type DocumentUncheckedUpdateWithoutTagsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  chunks?: Prisma.DocumentChunkUncheckedUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUncheckedUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUncheckedUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUncheckedUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUncheckedUpdateManyWithoutDocumentNestedInput
+}
+
+export type DocumentCreateWithoutNotesInput = {
+  id?: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  favorite?: boolean
+  user: Prisma.UserCreateNestedOneWithoutDocumentsInput
+  chunks?: Prisma.DocumentChunkCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagCreateNestedManyWithoutDocumentInput
+  folder?: Prisma.FolderCreateNestedOneWithoutDocumentsInput
+}
+
+export type DocumentUncheckedCreateWithoutNotesInput = {
+  id?: string
+  userId: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
+  chunks?: Prisma.DocumentChunkUncheckedCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentUncheckedCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobUncheckedCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceUncheckedCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagUncheckedCreateNestedManyWithoutDocumentInput
+}
+
+export type DocumentCreateOrConnectWithoutNotesInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutNotesInput, Prisma.DocumentUncheckedCreateWithoutNotesInput>
+}
+
+export type DocumentUpsertWithoutNotesInput = {
+  update: Prisma.XOR<Prisma.DocumentUpdateWithoutNotesInput, Prisma.DocumentUncheckedUpdateWithoutNotesInput>
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutNotesInput, Prisma.DocumentUncheckedCreateWithoutNotesInput>
+  where?: Prisma.DocumentWhereInput
+}
+
+export type DocumentUpdateToOneWithWhereWithoutNotesInput = {
+  where?: Prisma.DocumentWhereInput
+  data: Prisma.XOR<Prisma.DocumentUpdateWithoutNotesInput, Prisma.DocumentUncheckedUpdateWithoutNotesInput>
+}
+
+export type DocumentUpdateWithoutNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  user?: Prisma.UserUpdateOneRequiredWithoutDocumentsNestedInput
+  chunks?: Prisma.DocumentChunkUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUpdateManyWithoutDocumentNestedInput
+  folder?: Prisma.FolderUpdateOneWithoutDocumentsNestedInput
+}
+
+export type DocumentUncheckedUpdateWithoutNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  chunks?: Prisma.DocumentChunkUncheckedUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUncheckedUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUncheckedUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUncheckedUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUncheckedUpdateManyWithoutDocumentNestedInput
+}
+
+export type DocumentCreateWithoutJobsInput = {
+  id?: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  favorite?: boolean
+  user: Prisma.UserCreateNestedOneWithoutDocumentsInput
+  chunks?: Prisma.DocumentChunkCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteCreateNestedManyWithoutDocumentInput
+  folder?: Prisma.FolderCreateNestedOneWithoutDocumentsInput
+}
+
+export type DocumentUncheckedCreateWithoutJobsInput = {
+  id?: string
+  userId: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
+  chunks?: Prisma.DocumentChunkUncheckedCreateNestedManyWithoutDocumentInput
+  conversations?: Prisma.ConversationDocumentUncheckedCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceUncheckedCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagUncheckedCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteUncheckedCreateNestedManyWithoutDocumentInput
+}
+
+export type DocumentCreateOrConnectWithoutJobsInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutJobsInput, Prisma.DocumentUncheckedCreateWithoutJobsInput>
+}
+
+export type DocumentUpsertWithoutJobsInput = {
+  update: Prisma.XOR<Prisma.DocumentUpdateWithoutJobsInput, Prisma.DocumentUncheckedUpdateWithoutJobsInput>
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutJobsInput, Prisma.DocumentUncheckedCreateWithoutJobsInput>
+  where?: Prisma.DocumentWhereInput
+}
+
+export type DocumentUpdateToOneWithWhereWithoutJobsInput = {
+  where?: Prisma.DocumentWhereInput
+  data: Prisma.XOR<Prisma.DocumentUpdateWithoutJobsInput, Prisma.DocumentUncheckedUpdateWithoutJobsInput>
+}
+
+export type DocumentUpdateWithoutJobsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  user?: Prisma.UserUpdateOneRequiredWithoutDocumentsNestedInput
+  chunks?: Prisma.DocumentChunkUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUpdateManyWithoutDocumentNestedInput
+  folder?: Prisma.FolderUpdateOneWithoutDocumentsNestedInput
+}
+
+export type DocumentUncheckedUpdateWithoutJobsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  chunks?: Prisma.DocumentChunkUncheckedUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUncheckedUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUncheckedUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUncheckedUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUncheckedUpdateManyWithoutDocumentNestedInput
 }
 
 export type DocumentCreateWithoutChunksInput = {
@@ -806,8 +1545,14 @@ export type DocumentCreateWithoutChunksInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  favorite?: boolean
   user: Prisma.UserCreateNestedOneWithoutDocumentsInput
   conversations?: Prisma.ConversationDocumentCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteCreateNestedManyWithoutDocumentInput
+  folder?: Prisma.FolderCreateNestedOneWithoutDocumentsInput
 }
 
 export type DocumentUncheckedCreateWithoutChunksInput = {
@@ -826,7 +1571,13 @@ export type DocumentUncheckedCreateWithoutChunksInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
   conversations?: Prisma.ConversationDocumentUncheckedCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobUncheckedCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceUncheckedCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagUncheckedCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteUncheckedCreateNestedManyWithoutDocumentInput
 }
 
 export type DocumentCreateOrConnectWithoutChunksInput = {
@@ -860,8 +1611,14 @@ export type DocumentUpdateWithoutChunksInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutDocumentsNestedInput
   conversations?: Prisma.ConversationDocumentUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUpdateManyWithoutDocumentNestedInput
+  folder?: Prisma.FolderUpdateOneWithoutDocumentsNestedInput
 }
 
 export type DocumentUncheckedUpdateWithoutChunksInput = {
@@ -880,7 +1637,13 @@ export type DocumentUncheckedUpdateWithoutChunksInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
   conversations?: Prisma.ConversationDocumentUncheckedUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUncheckedUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUncheckedUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUncheckedUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUncheckedUpdateManyWithoutDocumentNestedInput
 }
 
 export type DocumentCreateWithoutConversationsInput = {
@@ -898,8 +1661,14 @@ export type DocumentCreateWithoutConversationsInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  favorite?: boolean
   user: Prisma.UserCreateNestedOneWithoutDocumentsInput
   chunks?: Prisma.DocumentChunkCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteCreateNestedManyWithoutDocumentInput
+  folder?: Prisma.FolderCreateNestedOneWithoutDocumentsInput
 }
 
 export type DocumentUncheckedCreateWithoutConversationsInput = {
@@ -918,7 +1687,13 @@ export type DocumentUncheckedCreateWithoutConversationsInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
   chunks?: Prisma.DocumentChunkUncheckedCreateNestedManyWithoutDocumentInput
+  jobs?: Prisma.ProcessingJobUncheckedCreateNestedManyWithoutDocumentInput
+  artifacts?: Prisma.ArtifactSourceUncheckedCreateNestedManyWithoutDocumentInput
+  tags?: Prisma.DocumentTagUncheckedCreateNestedManyWithoutDocumentInput
+  notes?: Prisma.NoteUncheckedCreateNestedManyWithoutDocumentInput
 }
 
 export type DocumentCreateOrConnectWithoutConversationsInput = {
@@ -952,8 +1727,14 @@ export type DocumentUpdateWithoutConversationsInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutDocumentsNestedInput
   chunks?: Prisma.DocumentChunkUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUpdateManyWithoutDocumentNestedInput
+  folder?: Prisma.FolderUpdateOneWithoutDocumentsNestedInput
 }
 
 export type DocumentUncheckedUpdateWithoutConversationsInput = {
@@ -972,7 +1753,13 @@ export type DocumentUncheckedUpdateWithoutConversationsInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
   chunks?: Prisma.DocumentChunkUncheckedUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUncheckedUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUncheckedUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUncheckedUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUncheckedUpdateManyWithoutDocumentNestedInput
 }
 
 export type DocumentCreateManyUserInput = {
@@ -990,6 +1777,8 @@ export type DocumentCreateManyUserInput = {
   errorCode?: string | null
   createdAt?: Date | string
   processedAt?: Date | string | null
+  folderId?: string | null
+  favorite?: boolean
 }
 
 export type DocumentUpdateWithoutUserInput = {
@@ -1007,8 +1796,14 @@ export type DocumentUpdateWithoutUserInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
   chunks?: Prisma.DocumentChunkUpdateManyWithoutDocumentNestedInput
   conversations?: Prisma.ConversationDocumentUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUpdateManyWithoutDocumentNestedInput
+  folder?: Prisma.FolderUpdateOneWithoutDocumentsNestedInput
 }
 
 export type DocumentUncheckedUpdateWithoutUserInput = {
@@ -1026,8 +1821,14 @@ export type DocumentUncheckedUpdateWithoutUserInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
   chunks?: Prisma.DocumentChunkUncheckedUpdateManyWithoutDocumentNestedInput
   conversations?: Prisma.ConversationDocumentUncheckedUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUncheckedUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUncheckedUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUncheckedUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUncheckedUpdateManyWithoutDocumentNestedInput
 }
 
 export type DocumentUncheckedUpdateManyWithoutUserInput = {
@@ -1045,6 +1846,96 @@ export type DocumentUncheckedUpdateManyWithoutUserInput = {
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  folderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+}
+
+export type DocumentCreateManyFolderInput = {
+  id?: string
+  userId: string
+  originalName: string
+  storageKey: string
+  storageProvider?: string
+  storageAssetId?: string | null
+  storageResourceType?: string
+  storageDeliveryType?: string
+  mimeType: string
+  sizeBytes: bigint | number
+  pageCount?: number | null
+  status?: $Enums.DocumentStatus
+  errorCode?: string | null
+  createdAt?: Date | string
+  processedAt?: Date | string | null
+  favorite?: boolean
+}
+
+export type DocumentUpdateWithoutFolderInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  user?: Prisma.UserUpdateOneRequiredWithoutDocumentsNestedInput
+  chunks?: Prisma.DocumentChunkUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUpdateManyWithoutDocumentNestedInput
+}
+
+export type DocumentUncheckedUpdateWithoutFolderInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  chunks?: Prisma.DocumentChunkUncheckedUpdateManyWithoutDocumentNestedInput
+  conversations?: Prisma.ConversationDocumentUncheckedUpdateManyWithoutDocumentNestedInput
+  jobs?: Prisma.ProcessingJobUncheckedUpdateManyWithoutDocumentNestedInput
+  artifacts?: Prisma.ArtifactSourceUncheckedUpdateManyWithoutDocumentNestedInput
+  tags?: Prisma.DocumentTagUncheckedUpdateManyWithoutDocumentNestedInput
+  notes?: Prisma.NoteUncheckedUpdateManyWithoutDocumentNestedInput
+}
+
+export type DocumentUncheckedUpdateManyWithoutFolderInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageAssetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageResourceType?: Prisma.StringFieldUpdateOperationsInput | string
+  storageDeliveryType?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  pageCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  processedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  favorite?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 
@@ -1055,11 +1946,19 @@ export type DocumentUncheckedUpdateManyWithoutUserInput = {
 export type DocumentCountOutputType = {
   chunks: number
   conversations: number
+  jobs: number
+  artifacts: number
+  tags: number
+  notes: number
 }
 
 export type DocumentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   chunks?: boolean | DocumentCountOutputTypeCountChunksArgs
   conversations?: boolean | DocumentCountOutputTypeCountConversationsArgs
+  jobs?: boolean | DocumentCountOutputTypeCountJobsArgs
+  artifacts?: boolean | DocumentCountOutputTypeCountArtifactsArgs
+  tags?: boolean | DocumentCountOutputTypeCountTagsArgs
+  notes?: boolean | DocumentCountOutputTypeCountNotesArgs
 }
 
 /**
@@ -1086,6 +1985,34 @@ export type DocumentCountOutputTypeCountConversationsArgs<ExtArgs extends runtim
   where?: Prisma.ConversationDocumentWhereInput
 }
 
+/**
+ * DocumentCountOutputType without action
+ */
+export type DocumentCountOutputTypeCountJobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProcessingJobWhereInput
+}
+
+/**
+ * DocumentCountOutputType without action
+ */
+export type DocumentCountOutputTypeCountArtifactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ArtifactSourceWhereInput
+}
+
+/**
+ * DocumentCountOutputType without action
+ */
+export type DocumentCountOutputTypeCountTagsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DocumentTagWhereInput
+}
+
+/**
+ * DocumentCountOutputType without action
+ */
+export type DocumentCountOutputTypeCountNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NoteWhereInput
+}
+
 
 export type DocumentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1103,9 +2030,16 @@ export type DocumentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   errorCode?: boolean
   createdAt?: boolean
   processedAt?: boolean
+  folderId?: boolean
+  favorite?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   chunks?: boolean | Prisma.Document$chunksArgs<ExtArgs>
   conversations?: boolean | Prisma.Document$conversationsArgs<ExtArgs>
+  jobs?: boolean | Prisma.Document$jobsArgs<ExtArgs>
+  artifacts?: boolean | Prisma.Document$artifactsArgs<ExtArgs>
+  tags?: boolean | Prisma.Document$tagsArgs<ExtArgs>
+  notes?: boolean | Prisma.Document$notesArgs<ExtArgs>
+  folder?: boolean | Prisma.Document$folderArgs<ExtArgs>
   _count?: boolean | Prisma.DocumentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["document"]>
 
@@ -1125,7 +2059,10 @@ export type DocumentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   errorCode?: boolean
   createdAt?: boolean
   processedAt?: boolean
+  folderId?: boolean
+  favorite?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  folder?: boolean | Prisma.Document$folderArgs<ExtArgs>
 }, ExtArgs["result"]["document"]>
 
 export type DocumentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1144,7 +2081,10 @@ export type DocumentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   errorCode?: boolean
   createdAt?: boolean
   processedAt?: boolean
+  folderId?: boolean
+  favorite?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  folder?: boolean | Prisma.Document$folderArgs<ExtArgs>
 }, ExtArgs["result"]["document"]>
 
 export type DocumentSelectScalar = {
@@ -1163,20 +2103,29 @@ export type DocumentSelectScalar = {
   errorCode?: boolean
   createdAt?: boolean
   processedAt?: boolean
+  folderId?: boolean
+  favorite?: boolean
 }
 
-export type DocumentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "originalName" | "storageKey" | "storageProvider" | "storageAssetId" | "storageResourceType" | "storageDeliveryType" | "mimeType" | "sizeBytes" | "pageCount" | "status" | "errorCode" | "createdAt" | "processedAt", ExtArgs["result"]["document"]>
+export type DocumentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "originalName" | "storageKey" | "storageProvider" | "storageAssetId" | "storageResourceType" | "storageDeliveryType" | "mimeType" | "sizeBytes" | "pageCount" | "status" | "errorCode" | "createdAt" | "processedAt" | "folderId" | "favorite", ExtArgs["result"]["document"]>
 export type DocumentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   chunks?: boolean | Prisma.Document$chunksArgs<ExtArgs>
   conversations?: boolean | Prisma.Document$conversationsArgs<ExtArgs>
+  jobs?: boolean | Prisma.Document$jobsArgs<ExtArgs>
+  artifacts?: boolean | Prisma.Document$artifactsArgs<ExtArgs>
+  tags?: boolean | Prisma.Document$tagsArgs<ExtArgs>
+  notes?: boolean | Prisma.Document$notesArgs<ExtArgs>
+  folder?: boolean | Prisma.Document$folderArgs<ExtArgs>
   _count?: boolean | Prisma.DocumentCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DocumentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  folder?: boolean | Prisma.Document$folderArgs<ExtArgs>
 }
 export type DocumentIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  folder?: boolean | Prisma.Document$folderArgs<ExtArgs>
 }
 
 export type $DocumentPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1185,6 +2134,11 @@ export type $DocumentPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     user: Prisma.$UserPayload<ExtArgs>
     chunks: Prisma.$DocumentChunkPayload<ExtArgs>[]
     conversations: Prisma.$ConversationDocumentPayload<ExtArgs>[]
+    jobs: Prisma.$ProcessingJobPayload<ExtArgs>[]
+    artifacts: Prisma.$ArtifactSourcePayload<ExtArgs>[]
+    tags: Prisma.$DocumentTagPayload<ExtArgs>[]
+    notes: Prisma.$NotePayload<ExtArgs>[]
+    folder: Prisma.$FolderPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1202,6 +2156,8 @@ export type $DocumentPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     errorCode: string | null
     createdAt: Date
     processedAt: Date | null
+    folderId: string | null
+    favorite: boolean
   }, ExtArgs["result"]["document"]>
   composites: {}
 }
@@ -1599,6 +2555,11 @@ export interface Prisma__DocumentClient<T, Null = never, ExtArgs extends runtime
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   chunks<T extends Prisma.Document$chunksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$chunksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentChunkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   conversations<T extends Prisma.Document$conversationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$conversationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ConversationDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  jobs<T extends Prisma.Document$jobsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$jobsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProcessingJobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  artifacts<T extends Prisma.Document$artifactsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$artifactsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ArtifactSourcePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  tags<T extends Prisma.Document$tagsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$tagsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notes<T extends Prisma.Document$notesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$notesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  folder<T extends Prisma.Document$folderArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$folderArgs<ExtArgs>>): Prisma.Prisma__FolderClient<runtime.Types.Result.GetResult<Prisma.$FolderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1643,6 +2604,8 @@ export interface DocumentFieldRefs {
   readonly errorCode: Prisma.FieldRef<"Document", 'String'>
   readonly createdAt: Prisma.FieldRef<"Document", 'DateTime'>
   readonly processedAt: Prisma.FieldRef<"Document", 'DateTime'>
+  readonly folderId: Prisma.FieldRef<"Document", 'String'>
+  readonly favorite: Prisma.FieldRef<"Document", 'Boolean'>
 }
     
 
@@ -2089,6 +3052,121 @@ export type Document$conversationsArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.ConversationDocumentScalarFieldEnum | Prisma.ConversationDocumentScalarFieldEnum[]
+}
+
+/**
+ * Document.jobs
+ */
+export type Document$jobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProcessingJob
+   */
+  select?: Prisma.ProcessingJobSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProcessingJob
+   */
+  omit?: Prisma.ProcessingJobOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProcessingJobInclude<ExtArgs> | null
+  where?: Prisma.ProcessingJobWhereInput
+  orderBy?: Prisma.ProcessingJobOrderByWithRelationInput | Prisma.ProcessingJobOrderByWithRelationInput[]
+  cursor?: Prisma.ProcessingJobWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProcessingJobScalarFieldEnum | Prisma.ProcessingJobScalarFieldEnum[]
+}
+
+/**
+ * Document.artifacts
+ */
+export type Document$artifactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ArtifactSource
+   */
+  select?: Prisma.ArtifactSourceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ArtifactSource
+   */
+  omit?: Prisma.ArtifactSourceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ArtifactSourceInclude<ExtArgs> | null
+  where?: Prisma.ArtifactSourceWhereInput
+  orderBy?: Prisma.ArtifactSourceOrderByWithRelationInput | Prisma.ArtifactSourceOrderByWithRelationInput[]
+  cursor?: Prisma.ArtifactSourceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ArtifactSourceScalarFieldEnum | Prisma.ArtifactSourceScalarFieldEnum[]
+}
+
+/**
+ * Document.tags
+ */
+export type Document$tagsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DocumentTag
+   */
+  select?: Prisma.DocumentTagSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DocumentTag
+   */
+  omit?: Prisma.DocumentTagOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DocumentTagInclude<ExtArgs> | null
+  where?: Prisma.DocumentTagWhereInput
+  orderBy?: Prisma.DocumentTagOrderByWithRelationInput | Prisma.DocumentTagOrderByWithRelationInput[]
+  cursor?: Prisma.DocumentTagWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DocumentTagScalarFieldEnum | Prisma.DocumentTagScalarFieldEnum[]
+}
+
+/**
+ * Document.notes
+ */
+export type Document$notesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Note
+   */
+  select?: Prisma.NoteSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Note
+   */
+  omit?: Prisma.NoteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NoteInclude<ExtArgs> | null
+  where?: Prisma.NoteWhereInput
+  orderBy?: Prisma.NoteOrderByWithRelationInput | Prisma.NoteOrderByWithRelationInput[]
+  cursor?: Prisma.NoteWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NoteScalarFieldEnum | Prisma.NoteScalarFieldEnum[]
+}
+
+/**
+ * Document.folder
+ */
+export type Document$folderArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Folder
+   */
+  select?: Prisma.FolderSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Folder
+   */
+  omit?: Prisma.FolderOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FolderInclude<ExtArgs> | null
+  where?: Prisma.FolderWhereInput
 }
 
 /**

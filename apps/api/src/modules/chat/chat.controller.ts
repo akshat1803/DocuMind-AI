@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import { boundedHistory, followUpActions } from './chat-context.js';
+import { claimGeneration, GenerationConflict } from './generation.service.js';
 import { NextFunction, Request, RequestHandler, Response, Router } from 'express';
 import { AskQuestionInputSchema, CreateConversationInputSchema, DocumentSelectionSchema, RenameConversationInputSchema } from '@documind/shared';
 import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth.middleware.js';
@@ -72,11 +75,14 @@ router.get('/:conversationId', asyncRoute(async (req, res) => {
     where: { id: req.params.conversationId, userId: req.userId },
     include: {
       documents: { include: { document: { select: { id: true, originalName: true, status: true } } } },
-      messages: { orderBy: { createdAt: 'asc' }, include: { citations: { orderBy: { citationNumber: 'asc' } } } },
+      messages: { orderBy: { createdAt: 'asc' }, include: { citations: { orderBy: { citationNumber: 'asc' }, include: { chunk: { select: { documentId: true, document: { select: { userId: true } } } } } } } },
     },
   });
   if (!conversation) return res.status(404).json({ error: { code: 'CONVERSATION_NOT_FOUND', message: 'Conversation not found.' } });
-  return res.json({ conversation });
+  return res.json({ conversation: { ...conversation, messages: conversation.messages.map((message) => ({
+    ...message, followUpActions: message.status === 'COMPLETED' && message.role === 'ASSISTANT' && message.citations.length ? followUpActions : [],
+    citations: message.citations.map(({ chunk, ...citation }) => ({ ...citation, documentId: chunk && chunk.document.userId === req.userId ? chunk.documentId : null, sourceDeleted: citation.sourceDeleted || !chunk })),
+  })) } });
 }));
 
 router.patch('/:conversationId', asyncRoute(async (req, res) => {
@@ -97,72 +103,68 @@ router.delete('/:conversationId', asyncRoute(async (req, res) => {
 
 router.post('/:conversationId/messages', asyncRoute(async (req, res) => {
   const parsed = AskQuestionInputSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Question must be between 1 and 4000 characters.' } });
-
-  const conversation = await prisma.conversation.findFirst({
-    where: { id: req.params.conversationId, userId: req.userId },
-    include: { documents: { select: { documentId: true } } },
-  });
-  if (!conversation) return res.status(404).json({ error: { code: 'CONVERSATION_NOT_FOUND', message: 'Conversation not found.' } });
-
-  const [, assistantMessage] = await prisma.$transaction([
-    prisma.message.create({ data: { conversationId: conversation.id, role: 'USER', content: parsed.data.question, status: 'COMPLETED' } }),
-    prisma.message.create({ data: { conversationId: conversation.id, role: 'ASSISTANT', content: '', status: 'STREAMING' } }),
-    prisma.conversation.update({ where: { id: conversation.id }, data: conversation.title === 'New conversation' ? { title: parsed.data.question.slice(0, 80) } : {} }),
-  ]);
-
-  res.status(200);
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache, no-transform');
-  res.setHeader('Connection', 'keep-alive');
-  res.flushHeaders();
-  const send = (event: string, data: unknown) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-  const abortController = new AbortController();
-  res.on('close', () => { if (!res.writableEnded) abortController.abort(); });
-  const startedAt = Date.now();
-
+  if (!parsed.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Enter a question of 1?4000 characters and a valid request identity.' } });
+  const { question, retryMessageId } = parsed.data;
+  let claim;
   try {
-    const chunks = await retrievalService.retrieve(req.userId!, conversation.documents.map((item) => item.documentId), parsed.data.question);
-    let answer = '';
-    if (chunks.length === 0 || chunks[0].similarityScore < 0.25) {
-      answer = 'The selected documents do not contain enough information to answer that question.';
+    claim = await claimGeneration(req.userId!, req.params.conversationId, question, parsed.data.requestId ?? randomUUID(), retryMessageId);
+  } catch (error) {
+    if (error instanceof GenerationConflict) return res.status(error.statusCode).json({ error: { code: error.code, message: error.code === 'GENERATION_IN_PROGRESS' ? 'An answer is already being generated. Wait for it to finish before trying again.' : 'This request cannot be completed. Refresh the conversation and try again.' } });
+    throw error;
+  }
+  const assistant = claim.message;
+  res.status(200).set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive' });
+  res.flushHeaders();
+  const send = (event: string, data: unknown) => { if (!res.destroyed && !res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
+  if (claim.replay) {
+    if (assistant.content) send('chunk', { text: assistant.content });
+    send('done', { messageId: assistant.id, citations: [], invalidCitations: [], status: assistant.status });
+    return res.end();
+  }
+  send('started', { messageId: assistant.id, requestId: assistant.requestId });
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, 120_000);
+  res.on('close', () => { if (!res.writableEnded) controller.abort(); });
+  const startedAt = Date.now();
+  let answer = '';
+  try {
+    const previous = await prisma.message.findMany({ where: { conversationId: req.params.conversationId, status: 'COMPLETED', id: { not: assistant.replyToId! }, createdAt: { lte: assistant.createdAt } }, orderBy: { createdAt: 'desc' }, take: 6 });
+    const history = boundedHistory(previous.reverse());
+    const searchQuestion = await aiService.contextualizeQuestion(question, history, controller.signal);
+    const chunks = await retrievalService.retrieve(req.userId!, claim.documentIds, searchQuestion, 8, controller.signal);
+    controller.signal.throwIfAborted();
+    if (!chunks.length || chunks[0].similarityScore < 0.25) {
+      answer = 'The selected documents do not contain enough information to answer that question. Try naming the topic or selecting another document.';
       send('chunk', { text: answer });
     } else {
-      const prompt = buildGroundedPrompt(parsed.data.question, chunks);
-      for await (const text of aiService.streamGroundedAnswer(prompt, abortController.signal)) {
+      const prompt = `${buildGroundedPrompt(searchQuestion, chunks)}\n\nOriginal question: ${question}\nUntrusted conversation context (not evidence):\n${history}`;
+      for await (const text of aiService.streamGroundedAnswer(prompt, controller.signal)) {
+        controller.signal.throwIfAborted();
         answer += text;
         send('chunk', { text });
       }
     }
-
-    const citationNumbers = parseCitationNumbers(answer, chunks.length);
+    controller.signal.throwIfAborted();
+    if (!answer.trim()) throw new Error('EMPTY_GENERATION');
+    const citations = parseCitationNumbers(answer, chunks.length);
     await prisma.$transaction(async (tx) => {
-      await tx.message.update({
-        where: { id: assistantMessage.id },
-        data: { content: answer, status: 'COMPLETED', latencyMs: Date.now() - startedAt },
-      });
-      if (citationNumbers.valid.length > 0) {
-        await tx.messageCitation.createMany({
-          data: citationNumbers.valid.map((citationNumber) => {
-            const chunk = chunks[citationNumber - 1];
-            return {
-              messageId: assistantMessage.id,
-              chunkId: chunk.id,
-              citationNumber,
-              excerpt: chunk.content.slice(0, 600),
-              similarityScore: chunk.similarityScore,
-            };
-          }),
-        });
-      }
+      await tx.message.update({ where: { id: assistant.id }, data: { content: answer, status: 'COMPLETED', latencyMs: Date.now() - startedAt } });
+      if (citations.valid.length) await tx.messageCitation.createMany({ data: citations.valid.map((citationNumber) => {
+        const chunk = chunks[citationNumber - 1];
+        return { messageId: assistant.id, chunkId: chunk.id, citationNumber, excerpt: chunk.content.slice(0, 600), similarityScore: chunk.similarityScore, documentName: chunk.documentName, pageStart: chunk.pageStart, pageEnd: chunk.pageEnd };
+      }) });
     });
-    send('done', { messageId: assistantMessage.id, citations: citationNumbers.valid, invalidCitations: citationNumbers.invalid });
-    res.end();
+    send('done', { messageId: assistant.id, citations: citations.valid, invalidCitations: citations.invalid, followUpActions: citations.valid.length ? followUpActions : [] });
   } catch (error) {
-    await prisma.message.updateMany({ where: { id: assistantMessage.id }, data: { status: 'FAILED', latencyMs: Date.now() - startedAt } });
-    send('error', { code: 'CHAT_GENERATION_FAILED', message: 'The answer could not be generated.' });
-    res.end();
-    console.error('Chat generation failed:', error);
+    const cancelled = controller.signal.aborted && !timedOut;
+    const code = cancelled ? 'GENERATION_CANCELLED' : timedOut ? 'GENERATION_TIMEOUT' : 'CHAT_GENERATION_FAILED';
+    await prisma.message.updateMany({ where: { id: assistant.id, status: 'STREAMING' }, data: { content: answer, status: cancelled ? 'CANCELLED' : 'FAILED', errorCode: code, latencyMs: Date.now() - startedAt } });
+    send('error', { code, message: cancelled ? 'Generation stopped.' : 'The answer could not be completed. You can retry it.' });
+    if (!controller.signal.aborted) console.error('Chat generation failed:', error instanceof Error ? error.name : 'UnknownError');
+  } finally {
+    clearTimeout(timer);
+    if (!res.writableEnded) res.end();
   }
 }));
 

@@ -4,6 +4,7 @@ import { env } from '../../config/env.js';
 import { authMiddleware, AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 import { prisma } from '../../shared/db.js';
 import { ingestionService } from '../ingestion/ingestion.service.js';
+import { queueDocumentIngestion } from '../ingestion/processing-queue.js';
 import { getDocumentStorage } from './storage.service.js';
 
 const router = Router();
@@ -58,9 +59,10 @@ router.post('/', upload.single('file'), asyncRoute(async (req: AuthenticatedRequ
       },
       select: { id: true, originalName: true, status: true, sizeBytes: true, createdAt: true },
     });
-    void ingestionService.ingestDocument(document.id, req.file.buffer).catch((error) => {
-      console.error(`Document ingestion failed for ${document.id}:`, error);
-    });
+    const processingJobId = await queueDocumentIngestion(req.userId, document.id);
+    if (!env.REDIS_URL) void ingestionService.ingestDocument(document.id, req.file.buffer)
+      .then(() => prisma.processingJob.update({ where: { id: processingJobId }, data: { status: 'COMPLETED' } }))
+      .catch(async (error) => { await prisma.processingJob.update({ where: { id: processingJobId }, data: { status: 'FAILED', errorCode: 'PROCESSING_FAILED' } }); console.error(`Document ingestion failed for ${document.id}:`, error); });
     return res.status(201).json({ document: { ...document, sizeBytes: document.sizeBytes.toString() } });
   } catch (error) {
     await storage.deletePdf(stored.publicId).catch(() => undefined);
@@ -76,10 +78,13 @@ router.post('/:documentId/retry', asyncRoute(async (req: AuthenticatedRequest, r
   if (!document) {
     return res.status(404).json({ error: { code: 'FAILED_DOCUMENT_NOT_FOUND', message: 'Failed document not found.' } });
   }
-  const buffer = await getDocumentStorage().downloadPdf(document.storageKey);
-  void ingestionService.ingestDocument(document.id, buffer).catch((error) => {
-    console.error(`Document retry failed for ${document.id}:`, error);
-  });
+  const processingJobId = await queueDocumentIngestion(req.userId!, document.id);
+  if (!env.REDIS_URL) {
+    const buffer = await getDocumentStorage().downloadPdf(document.storageKey);
+    void ingestionService.ingestDocument(document.id, buffer)
+      .then(() => prisma.processingJob.update({ where: { id: processingJobId }, data: { status: 'COMPLETED' } }))
+      .catch(async (error) => { await prisma.processingJob.update({ where: { id: processingJobId }, data: { status: 'FAILED', errorCode: 'PROCESSING_FAILED' } }); console.error(`Document retry failed for ${document.id}:`, error); });
+  }
   return res.status(202).json({ status: 'PROCESSING' });
 }));
 
@@ -103,6 +108,16 @@ router.get('/:documentId', asyncRoute(async (req: AuthenticatedRequest, res: Res
   return res.json({ document: { ...document, sizeBytes: document.sizeBytes.toString() } });
 }));
 
+router.get('/:documentId/content', asyncRoute(async (req, res) => {
+  const document = await prisma.document.findFirst({ where: { id: req.params.documentId, userId: req.userId }, select: { id: true, storageKey: true, sizeBytes: true } });
+  if (!document) return res.status(404).json({ error: { code: 'DOCUMENT_NOT_FOUND', message: 'Document not found.' } });
+  const controller = new AbortController();
+  res.on('close', () => { if (!res.writableEnded) controller.abort(); });
+  const buffer = await getDocumentStorage().downloadPdf(document.storageKey, controller.signal);
+  if (!await prisma.document.count({ where: { id: document.id, userId: req.userId } })) return res.status(404).json({ error: { code: 'DOCUMENT_NOT_FOUND', message: 'Document no longer available.' } });
+  return res.set({ 'Content-Type': 'application/pdf', 'Cache-Control': 'private, no-store', 'Content-Disposition': 'inline', 'X-Content-Type-Options': 'nosniff' }).send(buffer);
+}));
+
 router.get('/:documentId/source', asyncRoute(async (req: AuthenticatedRequest, res: Response) => {
   const document = await prisma.document.findFirst({
     where: { id: req.params.documentId, userId: req.userId },
@@ -123,7 +138,10 @@ router.delete('/:documentId', asyncRoute(async (req: AuthenticatedRequest, res: 
     return res.status(404).json({ error: { code: 'DOCUMENT_NOT_FOUND', message: 'Document not found.' } });
   }
   await getDocumentStorage().deletePdf(document.storageKey);
-  await prisma.document.delete({ where: { id: document.id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.messageCitation.updateMany({ where: { chunk: { documentId: document.id } }, data: { chunkId: null, excerpt: '', documentName: null, pageStart: null, pageEnd: null, sourceDeleted: true } });
+    await tx.document.delete({ where: { id: document.id } });
+  });
   return res.status(204).send();
 }));
 

@@ -1,6 +1,7 @@
+import * as Dialog from '@radix-ui/react-dialog';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, FileText, LoaderCircle, Send, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Copy, LoaderCircle, Pencil, Send, Sparkles, Square, X } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { conversationsService } from '@/services/conversations.service';
@@ -9,127 +10,76 @@ import type { ChatMessage, Citation } from '@/types/api';
 import { NEW_CONVERSATION_ID, readDraftDocumentIds } from '@/lib/chat-route';
 import ConversationHistory from './ConversationHistory';
 import MarkdownAnswer from './MarkdownAnswer';
+import PdfViewer from '../documents/PdfViewer';
 
-function CitedAnswer({ message, onCitation }: { message: ChatMessage; onCitation(citation: Citation): void }) {
-  return <MarkdownAnswer content={message.content} citations={message.citations} onCitation={onCitation} />;
+function Answer({ message, onCitation, onFollowUp, onRetry }: { message: ChatMessage; onCitation(citation: Citation): void; onFollowUp(question: string): void; onRetry(message: ChatMessage): void }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() { await navigator.clipboard.writeText(message.content); setCopied(true); setTimeout(() => setCopied(false), 1600); }
+  return <article className="group max-w-3xl rounded-2xl border border-ink/10 bg-paper px-5 py-4 text-sm text-ink shadow-card">
+    {message.status === 'FAILED' || message.status === 'CANCELLED' ? <div className="flex items-center justify-between gap-3"><p className="text-ink-muted">{message.content || 'The answer was stopped before it could finish.'}</p><button type="button" className="text-button" onClick={() => onRetry(message)}>Retry</button></div> : <>
+      <MarkdownAnswer content={message.content} citations={message.citations} onCitation={onCitation} />
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-3"><button type="button" className="message-action" onClick={() => void copy()}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? 'Copied' : 'Copy'}</button>{message.followUpActions?.map((action) => <button key={action.label} type="button" className="follow-up" onClick={() => onFollowUp(action.question)}>{action.label}</button>)}</div>
+    </>}
+  </article>;
 }
 
-function ConversationPageLoader() {
-  return (
-    <div className="grid min-h-0 flex-1 place-items-center bg-white text-slate-600" role="status" aria-live="polite">
-      <div className="text-center"><LoaderCircle className="mx-auto animate-spin text-sky-600" size={36} /><p className="mt-3 text-sm font-semibold">Loading conversation…</p></div>
-    </div>
-  );
+function RenameDialog({ title, onRename }: { title: string; onRename(title: string): Promise<void> }) {
+  const [open, setOpen] = useState(false); const [value, setValue] = useState(title);
+  useEffect(() => setValue(title), [title]);
+  return <Dialog.Root open={open} onOpenChange={setOpen}><Dialog.Trigger asChild><button type="button" className="icon-button" aria-label="Rename conversation"><Pencil size={16} /></button></Dialog.Trigger><Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-40 bg-ink/30 backdrop-blur-sm" /><Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-paper p-6 shadow-paper focus:outline-none"><div className="flex items-center justify-between"><Dialog.Title className="font-display text-2xl text-ink">Rename conversation</Dialog.Title><Dialog.Close asChild><button className="icon-button" aria-label="Close"><X size={16} /></button></Dialog.Close></div><form className="mt-5" onSubmit={(event) => { event.preventDefault(); void onRename(value.trim()).then(() => setOpen(false)); }}><input autoFocus value={value} maxLength={120} onChange={(event) => setValue(event.target.value)} className="field" aria-label="Conversation title" /><div className="mt-5 flex justify-end gap-2"><Dialog.Close asChild><button type="button" className="secondary-button">Cancel</button></Dialog.Close><button disabled={!value.trim()} className="primary-button">Save title</button></div></form></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
 
 export default function ChatWorkspace() {
-  const { conversationId = '' } = useParams();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { conversationId = '' } = useParams(); const navigate = useNavigate(); const [searchParams] = useSearchParams(); const queryClient = useQueryClient();
   const isDraft = conversationId === NEW_CONVERSATION_ID;
-  const draftSelection = searchParams.get('documents') ?? '';
-  const routeDocumentIds = useMemo(
-    () => readDraftDocumentIds(new URLSearchParams({ documents: draftSelection })),
-    [draftSelection],
-  );
-  const queryClient = useQueryClient();
-  const conversation = useQuery({
-    queryKey: ['conversation', conversationId],
-    queryFn: () => conversationsService.get(conversationId),
-    enabled: Boolean(conversationId) && !isDraft,
-    placeholderData: (previousData) => previousData,
-  });
-  const conversationMatchesRoute = !isDraft && conversation.data?.conversation.id === conversationId;
-  const contextDocuments = useQuery({ queryKey: ['documents'], queryFn: documentsService.list, enabled: isDraft || !conversationMatchesRoute });
-  const [question, setQuestion] = useState('');
-  const [pendingQuestion, setPendingQuestion] = useState('');
-  const [streamingAnswer, setStreamingAnswer] = useState('');
-  const [sending, setSending] = useState(false);
-  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
-  const messageScroller = useRef<HTMLDivElement>(null);
-  const activeRequest = useRef<AbortController | null>(null);
-  const messages = useMemo(() => conversationMatchesRoute ? conversation.data?.conversation.messages ?? [] : [], [conversation.data, conversationMatchesRoute]);
-  const selectedDocuments = useMemo(() => {
-    if (conversationMatchesRoute) return conversation.data?.conversation.documents ?? [];
-    const requested = new Set(routeDocumentIds);
-    return (contextDocuments.data?.documents ?? [])
-      .filter((document) => requested.has(document.id) && document.status === 'READY')
-      .map((document) => ({ document: { id: document.id, originalName: document.originalName, status: document.status } }));
-  }, [contextDocuments.data, conversation.data, conversationMatchesRoute, routeDocumentIds]);
-  const documentIds = useMemo(() => selectedDocuments.map(({ document }) => document.id), [selectedDocuments]);
+  const routeDocumentIds = useMemo(() => readDraftDocumentIds(new URLSearchParams({ documents: searchParams.get('documents') ?? '' })), [searchParams]);
+  const conversation = useQuery({ queryKey: ['conversation', conversationId], queryFn: () => conversationsService.get(conversationId), enabled: Boolean(conversationId) && !isDraft, placeholderData: (previous) => previous });
+  const matches = !isDraft && conversation.data?.conversation.id === conversationId;
+  const contextDocuments = useQuery({ queryKey: ['documents'], queryFn: documentsService.list, enabled: isDraft || !matches });
+  const [question, setQuestion] = useState(''); const [pendingQuestion, setPendingQuestion] = useState(''); const [streamingAnswer, setStreamingAnswer] = useState(''); const [sending, setSending] = useState(false);
+  const [activeTab, setActiveTab] = useState<'document' | 'chat'>('chat'); const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null); const [viewerPage, setViewerPage] = useState<number | null>(null);
+  const scroller = useRef<HTMLDivElement>(null); const activeRequest = useRef<AbortController | null>(null);
+  const messages = matches ? conversation.data?.conversation.messages ?? [] : [];
+  const selectedDocuments = useMemo(() => matches ? conversation.data?.conversation.documents ?? [] : (contextDocuments.data?.documents ?? []).filter((document) => routeDocumentIds.includes(document.id) && document.status === 'READY').map((document) => ({ document: { id: document.id, originalName: document.originalName, status: document.status } })), [contextDocuments.data, conversation.data, matches, routeDocumentIds]);
+  const documentIds = selectedDocuments.map(({ document }) => document.id);
+  const activeDocument = selectedCitation?.documentId ? selectedDocuments.find(({ document }) => document.id === selectedCitation.documentId)?.document : selectedDocuments[0]?.document;
 
-  useEffect(() => {
-    const scroller = messageScroller.current;
-    if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: streamingAnswer ? 'auto' : 'smooth' });
-  }, [messages.length, pendingQuestion, streamingAnswer]);
+  useEffect(() => { const node = scroller.current; if (node) node.scrollTo({ top: node.scrollHeight, behavior: streamingAnswer ? 'auto' : 'smooth' }); }, [messages.length, pendingQuestion, streamingAnswer]);
+  useEffect(() => () => activeRequest.current?.abort(), []);
+  useEffect(() => { activeRequest.current?.abort(); activeRequest.current = null; setQuestion(''); setPendingQuestion(''); setStreamingAnswer(''); setSending(false); setSelectedCitation(null); }, [conversationId]);
 
-  useEffect(() => {
-    activeRequest.current?.abort();
-    activeRequest.current = null;
-    setQuestion('');
-    setPendingQuestion('');
-    setStreamingAnswer('');
-    setSending(false);
-    setSelectedCitation(null);
-  }, [conversationId]);
-
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    const text = question.trim();
+  function openCitation(citation: Citation) { setSelectedCitation(citation); setViewerPage(citation.pageStart); setActiveTab('document'); }
+  async function send(text: string, retryMessageId?: string) {
     if (!text || sending) return;
-    const controller = new AbortController();
-    activeRequest.current = controller;
-    setQuestion(''); setPendingQuestion(text); setStreamingAnswer(''); setSending(true);
+    const controller = new AbortController(); activeRequest.current = controller; setQuestion(''); setPendingQuestion(text); setStreamingAnswer(''); setSending(true);
     try {
-      let activeConversationId = conversationId;
-      if (isDraft) {
-        const created = await conversationsService.create(documentIds);
-        activeConversationId = created.conversation.id;
-      }
-      await conversationsService.streamMessage(activeConversationId, text, {
-        onChunk: (chunk) => setStreamingAnswer((current) => current + chunk),
-        onDone: () => undefined,
-      }, controller.signal);
-      await queryClient.invalidateQueries({ queryKey: ['conversation', activeConversationId] });
-      await queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      setPendingQuestion(''); setStreamingAnswer('');
-      if (isDraft) navigate(`/chat/${activeConversationId}`, { replace: true });
-    } catch (error) {
-      if (!controller.signal.aborted) toast.error(error instanceof Error ? error.message : 'Could not generate an answer.');
-      setPendingQuestion(''); setStreamingAnswer('');
-    } finally {
-      if (activeRequest.current === controller) activeRequest.current = null;
-      setSending(false);
-    }
+      let activeId = conversationId;
+      if (isDraft) { const created = await conversationsService.create(documentIds); activeId = created.conversation.id; }
+      await conversationsService.streamMessage(activeId, text, { onChunk: (chunk) => setStreamingAnswer((value) => value + chunk), onDone: () => undefined }, { requestId: crypto.randomUUID(), retryMessageId }, controller.signal);
+      await queryClient.invalidateQueries({ queryKey: ['conversation', activeId] }); await queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      if (isDraft) navigate(`/chat/${activeId}`, { replace: true });
+    } catch (error) { if (!controller.signal.aborted) toast.error(error instanceof Error ? error.message : 'Could not generate an answer.'); }
+    finally { if (activeRequest.current === controller) activeRequest.current = null; setPendingQuestion(''); setStreamingAnswer(''); setSending(false); }
   }
+  function submit(event: FormEvent) { event.preventDefault(); void send(question.trim()); }
+  async function rename(title: string) { if (!matches) return; try { await conversationsService.rename(conversationId, title); await queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] }); await queryClient.invalidateQueries({ queryKey: ['conversations'] }); } catch (error) { toast.error(error instanceof Error ? error.message : 'Could not rename the conversation.'); } }
 
-  const isMiddleLoading = (isDraft && contextDocuments.isLoading) || (!isDraft && !conversationMatchesRoute && !conversation.isError);
-  const isDraftInvalid = isDraft && !contextDocuments.isLoading && (routeDocumentIds.length === 0 || selectedDocuments.length !== routeDocumentIds.length);
-  const isConversationUnavailable = !isDraft && conversation.isError && !conversationMatchesRoute;
-  const selectionUrl = `/?documents=${encodeURIComponent([...documentIds].sort().join(','))}`;
-  const title = isDraft ? 'New conversation' : conversationMatchesRoute ? conversation.data!.conversation.title : 'Loading conversation…';
-
-  return (
-    <main className="grid h-screen overflow-hidden bg-slate-100 lg:grid-cols-[270px_minmax(0,1fr)] xl:grid-cols-[270px_minmax(0,1fr)_340px]">
-      <ConversationHistory currentConversationId={isDraft ? undefined : conversationId} documentIds={documentIds} />
-      <section className="flex h-screen min-h-0 flex-col overflow-hidden bg-white">
-        <header className="shrink-0 flex items-center gap-4 border-b border-slate-200 px-5 py-4"><Link to={selectionUrl} className="icon-button"><ArrowLeft size={18} /></Link><div className="min-w-0"><h1 className="truncate font-semibold">{title}</h1><p className="text-xs text-slate-500">{selectedDocuments.length} selected document(s)</p></div></header>
-        {isMiddleLoading ? <ConversationPageLoader /> : isDraftInvalid ? (
-          <div className="grid min-h-0 flex-1 place-items-center text-sm text-red-600"><div className="text-center"><p>The selected PDFs are unavailable.</p><Link to="/" className="mt-3 inline-block font-semibold text-sky-700">Return to documents</Link></div></div>
-        ) : isConversationUnavailable ? (
-          <div className="grid min-h-0 flex-1 place-items-center text-sm text-red-600">Conversation could not be loaded.</div>
-        ) : <>
-        <div ref={messageScroller} className="scrollbar-hidden mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-5 py-8">
-          {messages.length === 0 && !pendingQuestion && <div className="my-auto text-center"><Sparkles className="mx-auto text-sky-500" size={36} /><h2 className="mt-4 text-xl font-semibold">Ask your documents</h2><p className="mt-2 text-sm text-slate-500">Answers will be grounded in the selected PDFs and include citations.</p></div>}
-          {messages.map((message) => <article key={message.id} className={message.role === 'USER' ? 'ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-slate-950 px-4 py-3 text-sm text-white' : 'max-w-[92%] rounded-2xl rounded-bl-md bg-slate-100 px-5 py-4 text-sm text-slate-800'}>{message.role === 'ASSISTANT' ? <CitedAnswer message={message} onCitation={setSelectedCitation} /> : message.content}</article>)}
-          {pendingQuestion && <article className="ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-slate-950 px-4 py-3 text-sm text-white">{pendingQuestion}</article>}
-          {sending && <article className="max-w-[92%] rounded-2xl rounded-bl-md bg-slate-100 px-5 py-4 text-sm text-slate-800">{streamingAnswer ? <MarkdownAnswer content={streamingAnswer} /> : <p className="leading-7">Thinking…</p>}</article>}
+  const loading = (isDraft && contextDocuments.isLoading) || (!isDraft && !matches && !conversation.isError); const invalidDraft = isDraft && !contextDocuments.isLoading && (routeDocumentIds.length === 0 || selectedDocuments.length !== routeDocumentIds.length); const unavailable = !isDraft && conversation.isError && !matches; const title = isDraft ? 'New conversation' : matches ? conversation.data!.conversation.title : 'Loading conversation…'; const selectionUrl = `/?documents=${encodeURIComponent([...documentIds].sort().join(','))}`;
+  return <main className="grid h-screen overflow-hidden bg-canvas lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(360px,0.9fr)_minmax(430px,1.1fr)]">
+    <ConversationHistory currentConversationId={isDraft ? undefined : conversationId} documentIds={documentIds} />
+    <section className={`min-h-0 overflow-hidden border-r border-ink/10 bg-paper ${activeTab === 'document' ? 'block' : 'hidden'} xl:block`}><PdfViewer documentId={activeDocument?.id} documentName={activeDocument?.originalName} page={viewerPage} onPageChange={setViewerPage} /></section>
+    <section className={`min-h-0 flex-col overflow-hidden bg-canvas ${activeTab === 'chat' ? 'flex' : 'hidden'} xl:flex`}>
+      <header className="flex shrink-0 items-center gap-3 border-b border-ink/10 bg-paper px-4 py-3"><Link to={selectionUrl} className="icon-button"><ArrowLeft size={18} /></Link><div className="min-w-0 flex-1"><h1 className="truncate font-display text-xl text-ink">{title}</h1><p className="text-xs text-ink-muted">{selectedDocuments.length} source{selectedDocuments.length === 1 ? '' : 's'} selected</p></div>{matches && <RenameDialog title={title} onRename={rename} />}</header>
+      <div className="flex shrink-0 border-b border-ink/10 bg-paper xl:hidden"><button className={`tab-button ${activeTab === 'document' ? 'tab-button-active' : ''}`} onClick={() => setActiveTab('document')}>Document</button><button className={`tab-button ${activeTab === 'chat' ? 'tab-button-active' : ''}`} onClick={() => setActiveTab('chat')}>Chat</button></div>
+      {loading ? <div className="grid flex-1 place-items-center text-ink-muted"><LoaderCircle className="animate-spin text-violet-600" /></div> : invalidDraft || unavailable ? <div className="grid flex-1 place-items-center p-8 text-center text-sm text-red-700"><div><p>{invalidDraft ? 'The selected PDFs are unavailable.' : 'Conversation could not be loaded.'}</p><Link to="/" className="mt-3 inline-block text-violet-700">Return to documents</Link></div></div> : <>
+        <div ref={scroller} className="scrollbar-hidden flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-6 sm:px-7">
+          {messages.length === 0 && !pendingQuestion && <div className="m-auto max-w-md text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-violet-100 text-violet-700"><Sparkles size={22} /></span><h2 className="mt-5 font-display text-3xl text-ink">Ask what matters.</h2><p className="mt-2 text-sm leading-6 text-ink-muted">DocuMind answers from your selected sources, then takes you to the supporting page.</p></div>}
+          {messages.map((message) => message.role === 'USER' ? <article key={message.id} className="ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-violet-700 px-4 py-3 text-sm text-white shadow-sm">{message.content}</article> : <Answer key={message.id} message={message} onCitation={openCitation} onFollowUp={(text) => void send(text)} onRetry={(message) => { const previous = messages[messages.findIndex((item) => item.id === message.id) - 1]; void send(previous?.content ?? '', message.id); }} />)}
+          {pendingQuestion && <article className="ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-violet-700 px-4 py-3 text-sm text-white">{pendingQuestion}</article>}
+          {sending && <article className="max-w-3xl rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4 text-sm text-ink">{streamingAnswer ? <MarkdownAnswer content={streamingAnswer} /> : <p className="flex items-center gap-2 text-ink-muted"><span className="loading-dot" />Finding evidence…</p>}</article>}
         </div>
-        <form onSubmit={(event) => void submit(event)} className="shrink-0 border-t border-slate-200 bg-white p-4"><div className="mx-auto flex max-w-3xl gap-3"><textarea value={question} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} rows={2} maxLength={4000} placeholder="Ask a question about the selected documents…" className="min-h-14 flex-1 resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100" /><button disabled={sending || !question.trim()} className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-950 text-white disabled:opacity-40"><Send size={19} /></button></div></form>
-        </>}
-      </section>
-
-      <aside className="hidden h-screen overflow-hidden border-l border-slate-200 bg-slate-50 p-6 xl:block"><h2 className="text-sm font-semibold">Sources</h2><div className="mt-4 space-y-2">{selectedDocuments.map(({ document }) => <div key={document.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm"><FileText size={17} className="text-slate-500" /><span className="truncate">{document.originalName}</span></div>)}</div>{selectedCitation && <div className="mt-8 rounded-2xl border border-sky-200 bg-sky-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-sky-700">Citation [{selectedCitation.citationNumber}]</p><p className="mt-3 text-sm leading-6 text-slate-700">{selectedCitation.excerpt}</p></div>}</aside>
-    </main>
-  );
+        <form onSubmit={submit} className="shrink-0 border-t border-ink/10 bg-paper p-4"><div className="mx-auto flex max-w-3xl items-end gap-3"><textarea value={question} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} rows={2} maxLength={4000} placeholder="Ask about your sources…" className="field min-h-14 flex-1 resize-none" />{sending ? <button type="button" className="stop-button" onClick={() => activeRequest.current?.abort()} aria-label="Stop generation"><Square size={16} fill="currentColor" /></button> : <button disabled={!question.trim()} className="send-button" aria-label="Send question"><Send size={18} /></button>}</div></form>
+      </>}
+    </section>
+  </main>;
 }

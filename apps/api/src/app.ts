@@ -7,6 +7,7 @@ import { env } from './config/env.js';
 import { authRouter } from './modules/auth/auth.controller.js';
 import { chatRouter } from './modules/chat/chat.controller.js';
 import { documentsRouter } from './modules/documents/documents.controller.js';
+import { artifactsRouter } from './modules/artifacts/artifacts.controller.js';
 import { prisma } from './shared/db.js';
 
 export const app = express();
@@ -49,6 +50,7 @@ app.get('/api/v1/health/ready', async (_req: Request, res: Response) => {
 app.use('/api/v1/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 100, standardHeaders: 'draft-8', legacyHeaders: false }), authRouter);
 app.use('/api/v1/documents', rateLimit({ windowMs: 15 * 60 * 1000, limit: 200, standardHeaders: 'draft-8', legacyHeaders: false }), documentsRouter);
 app.use('/api/v1/conversations', rateLimit({ windowMs: 15 * 60 * 1000, limit: 100, standardHeaders: 'draft-8', legacyHeaders: false }), chatRouter);
+app.use('/api/v1/artifacts', rateLimit({ windowMs: 15 * 60 * 1000, limit: 60, standardHeaders: 'draft-8', legacyHeaders: false }), artifactsRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found.' } });

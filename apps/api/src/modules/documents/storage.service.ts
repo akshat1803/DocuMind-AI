@@ -12,7 +12,7 @@ export interface StoredDocument {
 
 export interface DocumentStorageProvider {
   uploadPdf(buffer: Buffer, userId: string): Promise<StoredDocument>;
-  downloadPdf(publicId: string): Promise<Buffer>;
+  downloadPdf(publicId: string, signal?: AbortSignal): Promise<Buffer>;
   deletePdf(publicId: string): Promise<void>;
   createDownloadUrl(publicId: string, expiresInSeconds?: number): string;
 }
@@ -73,10 +73,23 @@ export class CloudinaryStorageProvider implements DocumentStorageProvider {
     }
   }
 
-  async downloadPdf(publicId: string): Promise<Buffer> {
-    const response = await fetch(this.createDownloadUrl(publicId));
+  async downloadPdf(publicId: string, signal?: AbortSignal): Promise<Buffer> {
+    const response = await fetch(this.createDownloadUrl(publicId), { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(30_000)]) : AbortSignal.timeout(30_000) });
     if (!response.ok) throw new Error('CLOUDINARY_DOWNLOAD_FAILED');
-    return Buffer.from(await response.arrayBuffer());
+    if (!response.body) throw new Error('CLOUDINARY_DOWNLOAD_FAILED');
+    const reader = response.body.getReader();
+    const parts: Uint8Array[] = [];
+    let total = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > env.MAX_FILE_SIZE_MB * 1024 * 1024) throw new Error('PDF_TOO_LARGE');
+        parts.push(value);
+      }
+      return Buffer.concat(parts);
+    } finally { await reader.cancel().catch(() => undefined); reader.releaseLock(); }
   }
 
   createDownloadUrl(publicId: string, expiresInSeconds = 300): string {

@@ -3,6 +3,7 @@ import { aiService, EmbeddingProvider } from '../ai/ai.service.js';
 import { prisma } from '../../shared/db.js';
 import { chunkPages } from './chunking.js';
 import { extractPdfPages } from './pdf.service.js';
+import { queueArtifactGeneration } from './processing-queue.js';
 
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 120;
@@ -21,7 +22,7 @@ export class IngestionService {
 
   async ingestDocument(documentId: string, pdfBuffer: Buffer): Promise<void> {
     const claimed = await this.database.document.updateMany({
-      where: { id: documentId, status: { in: ['PENDING', 'FAILED'] } },
+      where: { id: documentId, status: { in: ['PENDING', 'FAILED', 'PROCESSING'] } },
       data: { status: 'PROCESSING', errorCode: null },
     });
     if (claimed.count !== 1) return;
@@ -46,10 +47,19 @@ export class IngestionService {
               (${id}::uuid, ${documentId}::uuid, ${index}, ${chunk.content}, ${chunk.pageStart}, ${chunk.pageEnd}, ${chunk.tokenCount}, ${JSON.stringify(vector)}::vector, ${contentHash})
           `;
         }
-        await tx.document.update({
+        const doc = await tx.document.update({
           where: { id: documentId },
           data: { status: 'READY', pageCount: pages.length, processedAt: new Date(), errorCode: null },
+          select: { id: true, userId: true },
         });
+        const artifact = await tx.analysisArtifact.create({
+          data: {
+            userId: doc.userId,
+            kind: 'OVERVIEW',
+            sources: { create: [{ documentId: doc.id }] },
+          },
+        });
+        await queueArtifactGeneration(doc.userId, artifact.id).catch(() => undefined);
       });
     } catch (error) {
       await this.database.document.updateMany({

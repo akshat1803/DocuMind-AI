@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import AuthPage from '@/features/auth/AuthPage';
 import DocumentLibrary from '@/features/documents/DocumentLibrary';
 import ChatWorkspace from '@/features/chat/ChatWorkspace';
+import StudyWorkspace from '@/features/study/StudyWorkspace';
 
 function App() {
   const { user, loading } = useAuth();
@@ -13,6 +14,7 @@ function App() {
       <Route path="/register" element={user ? <Navigate to="/" replace /> : <AuthPage mode="register" />} />
       <Route path="/" element={user ? <DocumentLibrary /> : <Navigate to="/login" replace />} />
       <Route path="/chat/:conversationId" element={user ? <ChatWorkspace /> : <Navigate to="/login" replace />} />
+      <Route path="/study" element={user ? <StudyWorkspace /> : <Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

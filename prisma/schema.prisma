@@ -17,6 +17,11 @@ model User {
   refreshTokens RefreshToken[]
   documents    Document[]
   conversations Conversation[]
+  artifacts     AnalysisArtifact[]
+  notes         Note[]
+  bookmarks     Bookmark[]
+  folders       Folder[]
+  tags          Tag[]
 
   @@map("users")
 }
@@ -61,10 +66,164 @@ model Document {
   processedAt  DateTime?              @map("processed_at")
   chunks       DocumentChunk[]
   conversations ConversationDocument[]
+  jobs         ProcessingJob[]
+  artifacts    ArtifactSource[]
+  tags         DocumentTag[]
+  notes        Note[]
+  folderId     String? @db.Uuid @map("folder_id")
+  folder       Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  favorite     Boolean @default(false)
 
   @@unique([storageProvider, storageKey])
   @@index([userId, status])
   @@map("documents")
+}
+
+enum ArtifactKind {
+  OVERVIEW
+  FLASHCARDS
+  QUIZ
+  COMPARISON
+  EXTRACTION
+}
+
+enum ArtifactStatus {
+  QUEUED
+  GENERATING
+  READY
+  FAILED
+  CANCELLED
+}
+
+model AnalysisArtifact {
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String         @db.Uuid @map("user_id")
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind          ArtifactKind
+  status        ArtifactStatus @default(QUEUED)
+  configuration Json           @default("{}")
+  result        Json?
+  promptVersion String         @default("v1") @map("prompt_version")
+  errorCode     String?        @map("error_code")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  sources       ArtifactSource[]
+  attempts      QuizAttempt[]
+  jobs          ProcessingJob[]
+  @@index([userId, kind, status])
+  @@map("analysis_artifacts")
+}
+
+model ArtifactSource {
+  artifactId String @db.Uuid @map("artifact_id")
+  artifact   AnalysisArtifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  documentId String @db.Uuid @map("document_id")
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  @@id([artifactId, documentId])
+  @@map("artifact_sources")
+}
+
+model Folder {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String
+  createdAt DateTime @default(now()) @map("created_at")
+  documents Document[]
+  @@unique([userId, name])
+  @@map("folders")
+}
+
+model Tag {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String
+  documents DocumentTag[]
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model DocumentTag {
+  documentId String @db.Uuid @map("document_id")
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  tagId String @db.Uuid @map("tag_id")
+  tag Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  @@id([documentId, tagId])
+  @@map("document_tags")
+}
+
+model Note {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId String? @db.Uuid @map("document_id")
+  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  conversationId String? @db.Uuid @map("conversation_id")
+  content String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([userId, documentId])
+  @@map("notes")
+}
+
+model Bookmark {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageId String? @db.Uuid @map("message_id")
+  label String?
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([userId, createdAt])
+  @@map("bookmarks")
+}
+
+model QuizAttempt {
+  id String @id @default(uuid()) @db.Uuid
+  artifactId String @db.Uuid @map("artifact_id")
+  artifact AnalysisArtifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid @map("user_id")
+  score Int
+  answers Json
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([userId, artifactId])
+  @@map("quiz_attempts")
+}
+
+enum ProcessingJobKind {
+  INGEST_DOCUMENT
+  GENERATE_OVERVIEW
+  GENERATE_STUDY
+}
+
+enum ProcessingJobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model ProcessingJob {
+  id          String              @id @default(uuid()) @db.Uuid
+  userId      String              @db.Uuid @map("user_id")
+  documentId  String?             @db.Uuid @map("document_id")
+  document    Document?           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  artifactId  String?             @db.Uuid @map("artifact_id")
+  artifact    AnalysisArtifact?   @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  kind        ProcessingJobKind
+  status      ProcessingJobStatus @default(QUEUED)
+  payload     Json                @default("{}")
+  attempts    Int                 @default(0)
+  maxAttempts Int                 @default(3) @map("max_attempts")
+  leaseUntil  DateTime?           @map("lease_until")
+  errorCode   String?             @map("error_code")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@index([documentId, status])
+  @@map("processing_jobs")
 }
 
 model DocumentChunk {
@@ -119,6 +278,7 @@ enum MessageStatus {
   STREAMING
   COMPLETED
   FAILED
+  CANCELLED
 }
 
 model Message {
@@ -133,6 +293,11 @@ model Message {
   latencyMs      Int?              @map("latency_ms")
   createdAt      DateTime          @default(now()) @map("created_at")
   citations      MessageCitation[]
+  requestId      String?           @unique @db.Uuid @map("request_id")
+  replyToId      String?           @db.Uuid @map("reply_to_id")
+  replyTo        Message?          @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies        Message[]         @relation("MessageReplies")
+  errorCode      String?           @map("error_code")
 
   @@index([conversationId, createdAt])
   @@map("messages")
@@ -142,8 +307,12 @@ model MessageCitation {
   id              String        @id @default(uuid()) @db.Uuid
   messageId       String        @db.Uuid @map("message_id")
   message         Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  chunkId         String        @db.Uuid @map("chunk_id")
-  chunk           DocumentChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  chunkId         String?       @db.Uuid @map("chunk_id")
+  chunk           DocumentChunk? @relation(fields: [chunkId], references: [id], onDelete: SetNull)
+  documentName    String?       @map("document_name")
+  pageStart       Int?          @map("page_start")
+  pageEnd         Int?          @map("page_end")
+  sourceDeleted   Boolean      @default(false) @map("source_deleted")
   citationNumber  Int           @map("citation_number")
   excerpt         String
   similarityScore Decimal?      @map("similarity_score") @db.Decimal(5, 4)

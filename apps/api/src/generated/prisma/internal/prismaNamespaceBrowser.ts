@@ -54,6 +54,15 @@ export const ModelName = {
   User: 'User',
   RefreshToken: 'RefreshToken',
   Document: 'Document',
+  AnalysisArtifact: 'AnalysisArtifact',
+  ArtifactSource: 'ArtifactSource',
+  Folder: 'Folder',
+  Tag: 'Tag',
+  DocumentTag: 'DocumentTag',
+  Note: 'Note',
+  Bookmark: 'Bookmark',
+  QuizAttempt: 'QuizAttempt',
+  ProcessingJob: 'ProcessingJob',
   DocumentChunk: 'DocumentChunk',
   Conversation: 'Conversation',
   ConversationDocument: 'ConversationDocument',
@@ -115,10 +124,118 @@ export const DocumentScalarFieldEnum = {
   status: 'status',
   errorCode: 'errorCode',
   createdAt: 'createdAt',
-  processedAt: 'processedAt'
+  processedAt: 'processedAt',
+  folderId: 'folderId',
+  favorite: 'favorite'
 } as const
 
 export type DocumentScalarFieldEnum = (typeof DocumentScalarFieldEnum)[keyof typeof DocumentScalarFieldEnum]
+
+
+export const AnalysisArtifactScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  kind: 'kind',
+  status: 'status',
+  configuration: 'configuration',
+  result: 'result',
+  promptVersion: 'promptVersion',
+  errorCode: 'errorCode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AnalysisArtifactScalarFieldEnum = (typeof AnalysisArtifactScalarFieldEnum)[keyof typeof AnalysisArtifactScalarFieldEnum]
+
+
+export const ArtifactSourceScalarFieldEnum = {
+  artifactId: 'artifactId',
+  documentId: 'documentId'
+} as const
+
+export type ArtifactSourceScalarFieldEnum = (typeof ArtifactSourceScalarFieldEnum)[keyof typeof ArtifactSourceScalarFieldEnum]
+
+
+export const FolderScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  createdAt: 'createdAt'
+} as const
+
+export type FolderScalarFieldEnum = (typeof FolderScalarFieldEnum)[keyof typeof FolderScalarFieldEnum]
+
+
+export const TagScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name'
+} as const
+
+export type TagScalarFieldEnum = (typeof TagScalarFieldEnum)[keyof typeof TagScalarFieldEnum]
+
+
+export const DocumentTagScalarFieldEnum = {
+  documentId: 'documentId',
+  tagId: 'tagId'
+} as const
+
+export type DocumentTagScalarFieldEnum = (typeof DocumentTagScalarFieldEnum)[keyof typeof DocumentTagScalarFieldEnum]
+
+
+export const NoteScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  documentId: 'documentId',
+  conversationId: 'conversationId',
+  content: 'content',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NoteScalarFieldEnum = (typeof NoteScalarFieldEnum)[keyof typeof NoteScalarFieldEnum]
+
+
+export const BookmarkScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  messageId: 'messageId',
+  label: 'label',
+  createdAt: 'createdAt'
+} as const
+
+export type BookmarkScalarFieldEnum = (typeof BookmarkScalarFieldEnum)[keyof typeof BookmarkScalarFieldEnum]
+
+
+export const QuizAttemptScalarFieldEnum = {
+  id: 'id',
+  artifactId: 'artifactId',
+  userId: 'userId',
+  score: 'score',
+  answers: 'answers',
+  createdAt: 'createdAt'
+} as const
+
+export type QuizAttemptScalarFieldEnum = (typeof QuizAttemptScalarFieldEnum)[keyof typeof QuizAttemptScalarFieldEnum]
+
+
+export const ProcessingJobScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  documentId: 'documentId',
+  artifactId: 'artifactId',
+  kind: 'kind',
+  status: 'status',
+  payload: 'payload',
+  attempts: 'attempts',
+  maxAttempts: 'maxAttempts',
+  leaseUntil: 'leaseUntil',
+  errorCode: 'errorCode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProcessingJobScalarFieldEnum = (typeof ProcessingJobScalarFieldEnum)[keyof typeof ProcessingJobScalarFieldEnum]
 
 
 export const DocumentChunkScalarFieldEnum = {
@@ -163,7 +280,10 @@ export const MessageScalarFieldEnum = {
   promptTokens: 'promptTokens',
   completionTokens: 'completionTokens',
   latencyMs: 'latencyMs',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  requestId: 'requestId',
+  replyToId: 'replyToId',
+  errorCode: 'errorCode'
 } as const
 
 export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
@@ -173,6 +293,10 @@ export const MessageCitationScalarFieldEnum = {
   id: 'id',
   messageId: 'messageId',
   chunkId: 'chunkId',
+  documentName: 'documentName',
+  pageStart: 'pageStart',
+  pageEnd: 'pageEnd',
+  sourceDeleted: 'sourceDeleted',
   citationNumber: 'citationNumber',
   excerpt: 'excerpt',
   similarityScore: 'similarityScore'
@@ -189,6 +313,21 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -203,4 +342,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

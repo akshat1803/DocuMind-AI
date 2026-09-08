@@ -24,7 +24,7 @@ export class RetrievalService {
     private readonly database: RetrievalDatabase = prisma,
   ) {}
 
-  async retrieve(userId: string, documentIds: string[], question: string, limit = 8): Promise<RetrievedChunk[]> {
+  async retrieve(userId: string, documentIds: string[], question: string, limit = 8, signal?: AbortSignal): Promise<RetrievedChunk[]> {
     const uniqueDocumentIds = [...new Set(documentIds)];
     if (uniqueDocumentIds.length === 0) throw new Error('DOCUMENTS_REQUIRED');
     if (!question.trim()) throw new Error('QUESTION_REQUIRED');
@@ -35,7 +35,7 @@ export class RetrievalService {
     });
     if (ownedReadyCount !== uniqueDocumentIds.length) throw new Error('DOCUMENT_ACCESS_DENIED');
 
-    const queryVector = await this.embeddings.embedQuery(question.trim());
+    const queryVector = await this.embeddings.embedQuery(question.trim(), signal);
     const rows = await this.database.$queryRawUnsafe<Array<{
       id: string;
       document_id: string;

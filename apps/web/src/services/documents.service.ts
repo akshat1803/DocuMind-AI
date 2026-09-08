@@ -1,4 +1,4 @@
-import { request } from './api';
+import { authorizedFetch, request } from './api';
 import type { DocumentSummary } from '@/types/api';
 
 export const documentsService = {
@@ -11,4 +11,8 @@ export const documentsService = {
   remove: (documentId: string) => request<void>(`/api/v1/documents/${documentId}`, { method: 'DELETE' }),
   retry: (documentId: string) => request<{ status: string }>(`/api/v1/documents/${documentId}/retry`, { method: 'POST', body: '{}' }),
   source: (documentId: string) => request<{ url: string; expiresInSeconds: number }>(`/api/v1/documents/${documentId}/source`),
+  content: async (documentId: string, signal?: AbortSignal) => {
+    const response = await authorizedFetch(`/api/v1/documents/${documentId}/content`, { signal });
+    return response.arrayBuffer();
+  },
 };

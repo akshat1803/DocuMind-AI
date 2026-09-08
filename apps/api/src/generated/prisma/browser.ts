@@ -33,6 +33,51 @@ export type RefreshToken = Prisma.RefreshTokenModel
  */
 export type Document = Prisma.DocumentModel
 /**
+ * Model AnalysisArtifact
+ * 
+ */
+export type AnalysisArtifact = Prisma.AnalysisArtifactModel
+/**
+ * Model ArtifactSource
+ * 
+ */
+export type ArtifactSource = Prisma.ArtifactSourceModel
+/**
+ * Model Folder
+ * 
+ */
+export type Folder = Prisma.FolderModel
+/**
+ * Model Tag
+ * 
+ */
+export type Tag = Prisma.TagModel
+/**
+ * Model DocumentTag
+ * 
+ */
+export type DocumentTag = Prisma.DocumentTagModel
+/**
+ * Model Note
+ * 
+ */
+export type Note = Prisma.NoteModel
+/**
+ * Model Bookmark
+ * 
+ */
+export type Bookmark = Prisma.BookmarkModel
+/**
+ * Model QuizAttempt
+ * 
+ */
+export type QuizAttempt = Prisma.QuizAttemptModel
+/**
+ * Model ProcessingJob
+ * 
+ */
+export type ProcessingJob = Prisma.ProcessingJobModel
+/**
  * Model DocumentChunk
  * 
  */

@@ -458,9 +458,9 @@ export type DocumentChunkSumOrderByAggregateInput = {
   tokenCount?: Prisma.SortOrder
 }
 
-export type DocumentChunkScalarRelationFilter = {
-  is?: Prisma.DocumentChunkWhereInput
-  isNot?: Prisma.DocumentChunkWhereInput
+export type DocumentChunkNullableScalarRelationFilter = {
+  is?: Prisma.DocumentChunkWhereInput | null
+  isNot?: Prisma.DocumentChunkWhereInput | null
 }
 
 export type DocumentChunkCreateNestedManyWithoutDocumentInput = {
@@ -505,24 +505,18 @@ export type DocumentChunkUncheckedUpdateManyWithoutDocumentNestedInput = {
   deleteMany?: Prisma.DocumentChunkScalarWhereInput | Prisma.DocumentChunkScalarWhereInput[]
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type DocumentChunkCreateNestedOneWithoutCitationsInput = {
   create?: Prisma.XOR<Prisma.DocumentChunkCreateWithoutCitationsInput, Prisma.DocumentChunkUncheckedCreateWithoutCitationsInput>
   connectOrCreate?: Prisma.DocumentChunkCreateOrConnectWithoutCitationsInput
   connect?: Prisma.DocumentChunkWhereUniqueInput
 }
 
-export type DocumentChunkUpdateOneRequiredWithoutCitationsNestedInput = {
+export type DocumentChunkUpdateOneWithoutCitationsNestedInput = {
   create?: Prisma.XOR<Prisma.DocumentChunkCreateWithoutCitationsInput, Prisma.DocumentChunkUncheckedCreateWithoutCitationsInput>
   connectOrCreate?: Prisma.DocumentChunkCreateOrConnectWithoutCitationsInput
   upsert?: Prisma.DocumentChunkUpsertWithoutCitationsInput
+  disconnect?: Prisma.DocumentChunkWhereInput | boolean
+  delete?: Prisma.DocumentChunkWhereInput | boolean
   connect?: Prisma.DocumentChunkWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.DocumentChunkUpdateToOneWithWhereWithoutCitationsInput, Prisma.DocumentChunkUpdateWithoutCitationsInput>, Prisma.DocumentChunkUncheckedUpdateWithoutCitationsInput>
 }

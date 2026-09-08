@@ -3,12 +3,15 @@ import type { ConversationDetail, ConversationSummary } from '@/types/api';
 
 export interface StreamCallbacks {
   onChunk(text: string): void;
-  onDone(data: { messageId: string; citations: number[]; invalidCitations: number[] }): void;
+  onStarted?(data: { messageId: string; requestId: string }): void;
+  onDone(data: { messageId: string; citations: number[]; invalidCitations: number[]; followUpActions?: Array<{ label: string; question: string }> }): void;
 }
 
-async function streamMessage(conversationId: string, question: string, callbacks: StreamCallbacks, signal?: AbortSignal): Promise<void> {
+interface SendMessageOptions { requestId: string; retryMessageId?: string }
+
+async function streamMessage(conversationId: string, question: string, callbacks: StreamCallbacks, options: SendMessageOptions, signal?: AbortSignal): Promise<void> {
   const response = await authorizedFetch(`/api/v1/conversations/${conversationId}/messages`, {
-    method: 'POST', body: JSON.stringify({ question }), signal,
+    method: 'POST', body: JSON.stringify({ question, ...options }), signal,
   });
   if (!response.body) throw new Error('Streaming is not supported by this browser.');
 
@@ -25,6 +28,7 @@ async function streamMessage(conversationId: string, question: string, callbacks
       const dataLine = block.match(/^data:\s*(.+)$/m)?.[1];
       if (!event || !dataLine) continue;
       const data = JSON.parse(dataLine) as Record<string, unknown>;
+      if (event === 'started') callbacks.onStarted?.(data as unknown as { messageId: string; requestId: string });
       if (event === 'chunk') callbacks.onChunk(String(data.text ?? ''));
       if (event === 'done') callbacks.onDone(data as unknown as Parameters<StreamCallbacks['onDone']>[0]);
       if (event === 'error') throw new Error(String(data.message ?? 'Chat generation failed.'));
@@ -42,5 +46,6 @@ export const conversationsService = {
   },
   get: (conversationId: string) => request<{ conversation: ConversationDetail }>(`/api/v1/conversations/${conversationId}`),
   remove: (conversationId: string) => request<void>(`/api/v1/conversations/${conversationId}`, { method: 'DELETE' }),
+  rename: (conversationId: string, title: string) => request<{ success: true }>(`/api/v1/conversations/${conversationId}`, { method: 'PATCH', body: JSON.stringify({ title }) }),
   streamMessage,
 };

@@ -27,11 +27,15 @@ export type AggregateMessageCitation = {
 }
 
 export type MessageCitationAvgAggregateOutputType = {
+  pageStart: number | null
+  pageEnd: number | null
   citationNumber: number | null
   similarityScore: runtime.Decimal | null
 }
 
 export type MessageCitationSumAggregateOutputType = {
+  pageStart: number | null
+  pageEnd: number | null
   citationNumber: number | null
   similarityScore: runtime.Decimal | null
 }
@@ -40,6 +44,10 @@ export type MessageCitationMinAggregateOutputType = {
   id: string | null
   messageId: string | null
   chunkId: string | null
+  documentName: string | null
+  pageStart: number | null
+  pageEnd: number | null
+  sourceDeleted: boolean | null
   citationNumber: number | null
   excerpt: string | null
   similarityScore: runtime.Decimal | null
@@ -49,6 +57,10 @@ export type MessageCitationMaxAggregateOutputType = {
   id: string | null
   messageId: string | null
   chunkId: string | null
+  documentName: string | null
+  pageStart: number | null
+  pageEnd: number | null
+  sourceDeleted: boolean | null
   citationNumber: number | null
   excerpt: string | null
   similarityScore: runtime.Decimal | null
@@ -58,6 +70,10 @@ export type MessageCitationCountAggregateOutputType = {
   id: number
   messageId: number
   chunkId: number
+  documentName: number
+  pageStart: number
+  pageEnd: number
+  sourceDeleted: number
   citationNumber: number
   excerpt: number
   similarityScore: number
@@ -66,11 +82,15 @@ export type MessageCitationCountAggregateOutputType = {
 
 
 export type MessageCitationAvgAggregateInputType = {
+  pageStart?: true
+  pageEnd?: true
   citationNumber?: true
   similarityScore?: true
 }
 
 export type MessageCitationSumAggregateInputType = {
+  pageStart?: true
+  pageEnd?: true
   citationNumber?: true
   similarityScore?: true
 }
@@ -79,6 +99,10 @@ export type MessageCitationMinAggregateInputType = {
   id?: true
   messageId?: true
   chunkId?: true
+  documentName?: true
+  pageStart?: true
+  pageEnd?: true
+  sourceDeleted?: true
   citationNumber?: true
   excerpt?: true
   similarityScore?: true
@@ -88,6 +112,10 @@ export type MessageCitationMaxAggregateInputType = {
   id?: true
   messageId?: true
   chunkId?: true
+  documentName?: true
+  pageStart?: true
+  pageEnd?: true
+  sourceDeleted?: true
   citationNumber?: true
   excerpt?: true
   similarityScore?: true
@@ -97,6 +125,10 @@ export type MessageCitationCountAggregateInputType = {
   id?: true
   messageId?: true
   chunkId?: true
+  documentName?: true
+  pageStart?: true
+  pageEnd?: true
+  sourceDeleted?: true
   citationNumber?: true
   excerpt?: true
   similarityScore?: true
@@ -192,7 +224,11 @@ export type MessageCitationGroupByArgs<ExtArgs extends runtime.Types.Extensions.
 export type MessageCitationGroupByOutputType = {
   id: string
   messageId: string
-  chunkId: string
+  chunkId: string | null
+  documentName: string | null
+  pageStart: number | null
+  pageEnd: number | null
+  sourceDeleted: boolean
   citationNumber: number
   excerpt: string
   similarityScore: runtime.Decimal | null
@@ -224,18 +260,26 @@ export type MessageCitationWhereInput = {
   NOT?: Prisma.MessageCitationWhereInput | Prisma.MessageCitationWhereInput[]
   id?: Prisma.UuidFilter<"MessageCitation"> | string
   messageId?: Prisma.UuidFilter<"MessageCitation"> | string
-  chunkId?: Prisma.UuidFilter<"MessageCitation"> | string
+  chunkId?: Prisma.UuidNullableFilter<"MessageCitation"> | string | null
+  documentName?: Prisma.StringNullableFilter<"MessageCitation"> | string | null
+  pageStart?: Prisma.IntNullableFilter<"MessageCitation"> | number | null
+  pageEnd?: Prisma.IntNullableFilter<"MessageCitation"> | number | null
+  sourceDeleted?: Prisma.BoolFilter<"MessageCitation"> | boolean
   citationNumber?: Prisma.IntFilter<"MessageCitation"> | number
   excerpt?: Prisma.StringFilter<"MessageCitation"> | string
   similarityScore?: Prisma.DecimalNullableFilter<"MessageCitation"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   message?: Prisma.XOR<Prisma.MessageScalarRelationFilter, Prisma.MessageWhereInput>
-  chunk?: Prisma.XOR<Prisma.DocumentChunkScalarRelationFilter, Prisma.DocumentChunkWhereInput>
+  chunk?: Prisma.XOR<Prisma.DocumentChunkNullableScalarRelationFilter, Prisma.DocumentChunkWhereInput> | null
 }
 
 export type MessageCitationOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   messageId?: Prisma.SortOrder
-  chunkId?: Prisma.SortOrder
+  chunkId?: Prisma.SortOrderInput | Prisma.SortOrder
+  documentName?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageStart?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageEnd?: Prisma.SortOrderInput | Prisma.SortOrder
+  sourceDeleted?: Prisma.SortOrder
   citationNumber?: Prisma.SortOrder
   excerpt?: Prisma.SortOrder
   similarityScore?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -250,18 +294,26 @@ export type MessageCitationWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.MessageCitationWhereInput[]
   NOT?: Prisma.MessageCitationWhereInput | Prisma.MessageCitationWhereInput[]
   messageId?: Prisma.UuidFilter<"MessageCitation"> | string
-  chunkId?: Prisma.UuidFilter<"MessageCitation"> | string
+  chunkId?: Prisma.UuidNullableFilter<"MessageCitation"> | string | null
+  documentName?: Prisma.StringNullableFilter<"MessageCitation"> | string | null
+  pageStart?: Prisma.IntNullableFilter<"MessageCitation"> | number | null
+  pageEnd?: Prisma.IntNullableFilter<"MessageCitation"> | number | null
+  sourceDeleted?: Prisma.BoolFilter<"MessageCitation"> | boolean
   citationNumber?: Prisma.IntFilter<"MessageCitation"> | number
   excerpt?: Prisma.StringFilter<"MessageCitation"> | string
   similarityScore?: Prisma.DecimalNullableFilter<"MessageCitation"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   message?: Prisma.XOR<Prisma.MessageScalarRelationFilter, Prisma.MessageWhereInput>
-  chunk?: Prisma.XOR<Prisma.DocumentChunkScalarRelationFilter, Prisma.DocumentChunkWhereInput>
+  chunk?: Prisma.XOR<Prisma.DocumentChunkNullableScalarRelationFilter, Prisma.DocumentChunkWhereInput> | null
 }, "id" | "messageId_citationNumber">
 
 export type MessageCitationOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   messageId?: Prisma.SortOrder
-  chunkId?: Prisma.SortOrder
+  chunkId?: Prisma.SortOrderInput | Prisma.SortOrder
+  documentName?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageStart?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageEnd?: Prisma.SortOrderInput | Prisma.SortOrder
+  sourceDeleted?: Prisma.SortOrder
   citationNumber?: Prisma.SortOrder
   excerpt?: Prisma.SortOrder
   similarityScore?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -278,7 +330,11 @@ export type MessageCitationScalarWhereWithAggregatesInput = {
   NOT?: Prisma.MessageCitationScalarWhereWithAggregatesInput | Prisma.MessageCitationScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"MessageCitation"> | string
   messageId?: Prisma.UuidWithAggregatesFilter<"MessageCitation"> | string
-  chunkId?: Prisma.UuidWithAggregatesFilter<"MessageCitation"> | string
+  chunkId?: Prisma.UuidNullableWithAggregatesFilter<"MessageCitation"> | string | null
+  documentName?: Prisma.StringNullableWithAggregatesFilter<"MessageCitation"> | string | null
+  pageStart?: Prisma.IntNullableWithAggregatesFilter<"MessageCitation"> | number | null
+  pageEnd?: Prisma.IntNullableWithAggregatesFilter<"MessageCitation"> | number | null
+  sourceDeleted?: Prisma.BoolWithAggregatesFilter<"MessageCitation"> | boolean
   citationNumber?: Prisma.IntWithAggregatesFilter<"MessageCitation"> | number
   excerpt?: Prisma.StringWithAggregatesFilter<"MessageCitation"> | string
   similarityScore?: Prisma.DecimalNullableWithAggregatesFilter<"MessageCitation"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -286,17 +342,25 @@ export type MessageCitationScalarWhereWithAggregatesInput = {
 
 export type MessageCitationCreateInput = {
   id?: string
+  documentName?: string | null
+  pageStart?: number | null
+  pageEnd?: number | null
+  sourceDeleted?: boolean
   citationNumber: number
   excerpt: string
   similarityScore?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   message: Prisma.MessageCreateNestedOneWithoutCitationsInput
-  chunk: Prisma.DocumentChunkCreateNestedOneWithoutCitationsInput
+  chunk?: Prisma.DocumentChunkCreateNestedOneWithoutCitationsInput
 }
 
 export type MessageCitationUncheckedCreateInput = {
   id?: string
   messageId: string
-  chunkId: string
+  chunkId?: string | null
+  documentName?: string | null
+  pageStart?: number | null
+  pageEnd?: number | null
+  sourceDeleted?: boolean
   citationNumber: number
   excerpt: string
   similarityScore?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -304,17 +368,25 @@ export type MessageCitationUncheckedCreateInput = {
 
 export type MessageCitationUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   message?: Prisma.MessageUpdateOneRequiredWithoutCitationsNestedInput
-  chunk?: Prisma.DocumentChunkUpdateOneRequiredWithoutCitationsNestedInput
+  chunk?: Prisma.DocumentChunkUpdateOneWithoutCitationsNestedInput
 }
 
 export type MessageCitationUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   messageId?: Prisma.StringFieldUpdateOperationsInput | string
-  chunkId?: Prisma.StringFieldUpdateOperationsInput | string
+  chunkId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -323,7 +395,11 @@ export type MessageCitationUncheckedUpdateInput = {
 export type MessageCitationCreateManyInput = {
   id?: string
   messageId: string
-  chunkId: string
+  chunkId?: string | null
+  documentName?: string | null
+  pageStart?: number | null
+  pageEnd?: number | null
+  sourceDeleted?: boolean
   citationNumber: number
   excerpt: string
   similarityScore?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -331,6 +407,10 @@ export type MessageCitationCreateManyInput = {
 
 export type MessageCitationUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -339,7 +419,11 @@ export type MessageCitationUpdateManyMutationInput = {
 export type MessageCitationUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   messageId?: Prisma.StringFieldUpdateOperationsInput | string
-  chunkId?: Prisma.StringFieldUpdateOperationsInput | string
+  chunkId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -364,12 +448,18 @@ export type MessageCitationCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   messageId?: Prisma.SortOrder
   chunkId?: Prisma.SortOrder
+  documentName?: Prisma.SortOrder
+  pageStart?: Prisma.SortOrder
+  pageEnd?: Prisma.SortOrder
+  sourceDeleted?: Prisma.SortOrder
   citationNumber?: Prisma.SortOrder
   excerpt?: Prisma.SortOrder
   similarityScore?: Prisma.SortOrder
 }
 
 export type MessageCitationAvgOrderByAggregateInput = {
+  pageStart?: Prisma.SortOrder
+  pageEnd?: Prisma.SortOrder
   citationNumber?: Prisma.SortOrder
   similarityScore?: Prisma.SortOrder
 }
@@ -378,6 +468,10 @@ export type MessageCitationMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   messageId?: Prisma.SortOrder
   chunkId?: Prisma.SortOrder
+  documentName?: Prisma.SortOrder
+  pageStart?: Prisma.SortOrder
+  pageEnd?: Prisma.SortOrder
+  sourceDeleted?: Prisma.SortOrder
   citationNumber?: Prisma.SortOrder
   excerpt?: Prisma.SortOrder
   similarityScore?: Prisma.SortOrder
@@ -387,12 +481,18 @@ export type MessageCitationMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   messageId?: Prisma.SortOrder
   chunkId?: Prisma.SortOrder
+  documentName?: Prisma.SortOrder
+  pageStart?: Prisma.SortOrder
+  pageEnd?: Prisma.SortOrder
+  sourceDeleted?: Prisma.SortOrder
   citationNumber?: Prisma.SortOrder
   excerpt?: Prisma.SortOrder
   similarityScore?: Prisma.SortOrder
 }
 
 export type MessageCitationSumOrderByAggregateInput = {
+  pageStart?: Prisma.SortOrder
+  pageEnd?: Prisma.SortOrder
   citationNumber?: Prisma.SortOrder
   similarityScore?: Prisma.SortOrder
 }
@@ -491,6 +591,10 @@ export type NullableDecimalFieldUpdateOperationsInput = {
 
 export type MessageCitationCreateWithoutChunkInput = {
   id?: string
+  documentName?: string | null
+  pageStart?: number | null
+  pageEnd?: number | null
+  sourceDeleted?: boolean
   citationNumber: number
   excerpt: string
   similarityScore?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -500,6 +604,10 @@ export type MessageCitationCreateWithoutChunkInput = {
 export type MessageCitationUncheckedCreateWithoutChunkInput = {
   id?: string
   messageId: string
+  documentName?: string | null
+  pageStart?: number | null
+  pageEnd?: number | null
+  sourceDeleted?: boolean
   citationNumber: number
   excerpt: string
   similarityScore?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -537,7 +645,11 @@ export type MessageCitationScalarWhereInput = {
   NOT?: Prisma.MessageCitationScalarWhereInput | Prisma.MessageCitationScalarWhereInput[]
   id?: Prisma.UuidFilter<"MessageCitation"> | string
   messageId?: Prisma.UuidFilter<"MessageCitation"> | string
-  chunkId?: Prisma.UuidFilter<"MessageCitation"> | string
+  chunkId?: Prisma.UuidNullableFilter<"MessageCitation"> | string | null
+  documentName?: Prisma.StringNullableFilter<"MessageCitation"> | string | null
+  pageStart?: Prisma.IntNullableFilter<"MessageCitation"> | number | null
+  pageEnd?: Prisma.IntNullableFilter<"MessageCitation"> | number | null
+  sourceDeleted?: Prisma.BoolFilter<"MessageCitation"> | boolean
   citationNumber?: Prisma.IntFilter<"MessageCitation"> | number
   excerpt?: Prisma.StringFilter<"MessageCitation"> | string
   similarityScore?: Prisma.DecimalNullableFilter<"MessageCitation"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -545,15 +657,23 @@ export type MessageCitationScalarWhereInput = {
 
 export type MessageCitationCreateWithoutMessageInput = {
   id?: string
+  documentName?: string | null
+  pageStart?: number | null
+  pageEnd?: number | null
+  sourceDeleted?: boolean
   citationNumber: number
   excerpt: string
   similarityScore?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  chunk: Prisma.DocumentChunkCreateNestedOneWithoutCitationsInput
+  chunk?: Prisma.DocumentChunkCreateNestedOneWithoutCitationsInput
 }
 
 export type MessageCitationUncheckedCreateWithoutMessageInput = {
   id?: string
-  chunkId: string
+  chunkId?: string | null
+  documentName?: string | null
+  pageStart?: number | null
+  pageEnd?: number | null
+  sourceDeleted?: boolean
   citationNumber: number
   excerpt: string
   similarityScore?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -588,6 +708,10 @@ export type MessageCitationUpdateManyWithWhereWithoutMessageInput = {
 export type MessageCitationCreateManyChunkInput = {
   id?: string
   messageId: string
+  documentName?: string | null
+  pageStart?: number | null
+  pageEnd?: number | null
+  sourceDeleted?: boolean
   citationNumber: number
   excerpt: string
   similarityScore?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -595,6 +719,10 @@ export type MessageCitationCreateManyChunkInput = {
 
 export type MessageCitationUpdateWithoutChunkInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -604,6 +732,10 @@ export type MessageCitationUpdateWithoutChunkInput = {
 export type MessageCitationUncheckedUpdateWithoutChunkInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   messageId?: Prisma.StringFieldUpdateOperationsInput | string
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -612,6 +744,10 @@ export type MessageCitationUncheckedUpdateWithoutChunkInput = {
 export type MessageCitationUncheckedUpdateManyWithoutChunkInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   messageId?: Prisma.StringFieldUpdateOperationsInput | string
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -619,7 +755,11 @@ export type MessageCitationUncheckedUpdateManyWithoutChunkInput = {
 
 export type MessageCitationCreateManyMessageInput = {
   id?: string
-  chunkId: string
+  chunkId?: string | null
+  documentName?: string | null
+  pageStart?: number | null
+  pageEnd?: number | null
+  sourceDeleted?: boolean
   citationNumber: number
   excerpt: string
   similarityScore?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -627,15 +767,23 @@ export type MessageCitationCreateManyMessageInput = {
 
 export type MessageCitationUpdateWithoutMessageInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  chunk?: Prisma.DocumentChunkUpdateOneRequiredWithoutCitationsNestedInput
+  chunk?: Prisma.DocumentChunkUpdateOneWithoutCitationsNestedInput
 }
 
 export type MessageCitationUncheckedUpdateWithoutMessageInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  chunkId?: Prisma.StringFieldUpdateOperationsInput | string
+  chunkId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -643,7 +791,11 @@ export type MessageCitationUncheckedUpdateWithoutMessageInput = {
 
 export type MessageCitationUncheckedUpdateManyWithoutMessageInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  chunkId?: Prisma.StringFieldUpdateOperationsInput | string
+  chunkId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documentName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageStart?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  pageEnd?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  sourceDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   citationNumber?: Prisma.IntFieldUpdateOperationsInput | number
   excerpt?: Prisma.StringFieldUpdateOperationsInput | string
   similarityScore?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -655,68 +807,88 @@ export type MessageCitationSelect<ExtArgs extends runtime.Types.Extensions.Inter
   id?: boolean
   messageId?: boolean
   chunkId?: boolean
+  documentName?: boolean
+  pageStart?: boolean
+  pageEnd?: boolean
+  sourceDeleted?: boolean
   citationNumber?: boolean
   excerpt?: boolean
   similarityScore?: boolean
   message?: boolean | Prisma.MessageDefaultArgs<ExtArgs>
-  chunk?: boolean | Prisma.DocumentChunkDefaultArgs<ExtArgs>
+  chunk?: boolean | Prisma.MessageCitation$chunkArgs<ExtArgs>
 }, ExtArgs["result"]["messageCitation"]>
 
 export type MessageCitationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   messageId?: boolean
   chunkId?: boolean
+  documentName?: boolean
+  pageStart?: boolean
+  pageEnd?: boolean
+  sourceDeleted?: boolean
   citationNumber?: boolean
   excerpt?: boolean
   similarityScore?: boolean
   message?: boolean | Prisma.MessageDefaultArgs<ExtArgs>
-  chunk?: boolean | Prisma.DocumentChunkDefaultArgs<ExtArgs>
+  chunk?: boolean | Prisma.MessageCitation$chunkArgs<ExtArgs>
 }, ExtArgs["result"]["messageCitation"]>
 
 export type MessageCitationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   messageId?: boolean
   chunkId?: boolean
+  documentName?: boolean
+  pageStart?: boolean
+  pageEnd?: boolean
+  sourceDeleted?: boolean
   citationNumber?: boolean
   excerpt?: boolean
   similarityScore?: boolean
   message?: boolean | Prisma.MessageDefaultArgs<ExtArgs>
-  chunk?: boolean | Prisma.DocumentChunkDefaultArgs<ExtArgs>
+  chunk?: boolean | Prisma.MessageCitation$chunkArgs<ExtArgs>
 }, ExtArgs["result"]["messageCitation"]>
 
 export type MessageCitationSelectScalar = {
   id?: boolean
   messageId?: boolean
   chunkId?: boolean
+  documentName?: boolean
+  pageStart?: boolean
+  pageEnd?: boolean
+  sourceDeleted?: boolean
   citationNumber?: boolean
   excerpt?: boolean
   similarityScore?: boolean
 }
 
-export type MessageCitationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "messageId" | "chunkId" | "citationNumber" | "excerpt" | "similarityScore", ExtArgs["result"]["messageCitation"]>
+export type MessageCitationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "messageId" | "chunkId" | "documentName" | "pageStart" | "pageEnd" | "sourceDeleted" | "citationNumber" | "excerpt" | "similarityScore", ExtArgs["result"]["messageCitation"]>
 export type MessageCitationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   message?: boolean | Prisma.MessageDefaultArgs<ExtArgs>
-  chunk?: boolean | Prisma.DocumentChunkDefaultArgs<ExtArgs>
+  chunk?: boolean | Prisma.MessageCitation$chunkArgs<ExtArgs>
 }
 export type MessageCitationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   message?: boolean | Prisma.MessageDefaultArgs<ExtArgs>
-  chunk?: boolean | Prisma.DocumentChunkDefaultArgs<ExtArgs>
+  chunk?: boolean | Prisma.MessageCitation$chunkArgs<ExtArgs>
 }
 export type MessageCitationIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   message?: boolean | Prisma.MessageDefaultArgs<ExtArgs>
-  chunk?: boolean | Prisma.DocumentChunkDefaultArgs<ExtArgs>
+  chunk?: boolean | Prisma.MessageCitation$chunkArgs<ExtArgs>
 }
 
 export type $MessageCitationPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "MessageCitation"
   objects: {
     message: Prisma.$MessagePayload<ExtArgs>
-    chunk: Prisma.$DocumentChunkPayload<ExtArgs>
+    chunk: Prisma.$DocumentChunkPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     messageId: string
-    chunkId: string
+    chunkId: string | null
+    documentName: string | null
+    pageStart: number | null
+    pageEnd: number | null
+    sourceDeleted: boolean
     citationNumber: number
     excerpt: string
     similarityScore: runtime.Decimal | null
@@ -1115,7 +1287,7 @@ readonly fields: MessageCitationFieldRefs;
 export interface Prisma__MessageCitationClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   message<T extends Prisma.MessageDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.MessageDefaultArgs<ExtArgs>>): Prisma.Prisma__MessageClient<runtime.Types.Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  chunk<T extends Prisma.DocumentChunkDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DocumentChunkDefaultArgs<ExtArgs>>): Prisma.Prisma__DocumentChunkClient<runtime.Types.Result.GetResult<Prisma.$DocumentChunkPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  chunk<T extends Prisma.MessageCitation$chunkArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.MessageCitation$chunkArgs<ExtArgs>>): Prisma.Prisma__DocumentChunkClient<runtime.Types.Result.GetResult<Prisma.$DocumentChunkPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1148,6 +1320,10 @@ export interface MessageCitationFieldRefs {
   readonly id: Prisma.FieldRef<"MessageCitation", 'String'>
   readonly messageId: Prisma.FieldRef<"MessageCitation", 'String'>
   readonly chunkId: Prisma.FieldRef<"MessageCitation", 'String'>
+  readonly documentName: Prisma.FieldRef<"MessageCitation", 'String'>
+  readonly pageStart: Prisma.FieldRef<"MessageCitation", 'Int'>
+  readonly pageEnd: Prisma.FieldRef<"MessageCitation", 'Int'>
+  readonly sourceDeleted: Prisma.FieldRef<"MessageCitation", 'Boolean'>
   readonly citationNumber: Prisma.FieldRef<"MessageCitation", 'Int'>
   readonly excerpt: Prisma.FieldRef<"MessageCitation", 'String'>
   readonly similarityScore: Prisma.FieldRef<"MessageCitation", 'Decimal'>
@@ -1549,6 +1725,25 @@ export type MessageCitationDeleteManyArgs<ExtArgs extends runtime.Types.Extensio
    * Limit how many MessageCitations to delete.
    */
   limit?: number
+}
+
+/**
+ * MessageCitation.chunk
+ */
+export type MessageCitation$chunkArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DocumentChunk
+   */
+  select?: Prisma.DocumentChunkSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DocumentChunk
+   */
+  omit?: Prisma.DocumentChunkOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DocumentChunkInclude<ExtArgs> | null
+  where?: Prisma.DocumentChunkWhereInput
 }
 
 /**

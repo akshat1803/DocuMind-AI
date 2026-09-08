@@ -22,11 +22,22 @@ export const CreateConversationInputSchema = z.object({
 
 export const AskQuestionInputSchema = z.object({
   question: z.string().trim().min(1).max(4000),
+  requestId: z.string().uuid().optional(),
+  retryMessageId: z.string().uuid().optional(),
 });
 
 export const RenameConversationInputSchema = z.object({
   title: z.string().trim().min(1).max(120),
 });
+
+export const ArtifactRequestSchema = z.object({
+  kind: z.enum(['OVERVIEW', 'FLASHCARDS', 'QUIZ', 'COMPARISON', 'EXTRACTION']),
+  documentIds: DocumentSelectionSchema,
+  configuration: z.record(z.unknown()).default({}),
+});
+export const NoteInputSchema = z.object({ documentId: z.string().uuid().optional(), conversationId: z.string().uuid().optional(), content: z.string().trim().min(1).max(50_000) });
+export const BookmarkInputSchema = z.object({ messageId: z.string().uuid().optional(), label: z.string().trim().max(120).optional() });
+export const QuizAttemptInputSchema = z.object({ score: z.number().int().min(0).max(100), answers: z.record(z.number().int().min(0).max(3)) });
 
 export type CreateConversationInput = z.infer<typeof CreateConversationInputSchema>;
 export type AskQuestionInput = z.infer<typeof AskQuestionInputSchema>;

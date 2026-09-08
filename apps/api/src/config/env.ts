@@ -33,6 +33,8 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().optional(),
   MAX_FILE_SIZE_MB: z.coerce.number().default(20),
   MAX_DOCUMENTS_PER_USER: z.coerce.number().default(20),
+  REDIS_URL: z.string().url().optional(),
+  WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(8).default(2),
 });
 
 const parsed = envSchema.safeParse(process.env);

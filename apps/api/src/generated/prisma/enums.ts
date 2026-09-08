@@ -19,6 +19,48 @@ export const DocumentStatus = {
 export type DocumentStatus = (typeof DocumentStatus)[keyof typeof DocumentStatus]
 
 
+export const ArtifactKind = {
+  OVERVIEW: 'OVERVIEW',
+  FLASHCARDS: 'FLASHCARDS',
+  QUIZ: 'QUIZ',
+  COMPARISON: 'COMPARISON',
+  EXTRACTION: 'EXTRACTION'
+} as const
+
+export type ArtifactKind = (typeof ArtifactKind)[keyof typeof ArtifactKind]
+
+
+export const ArtifactStatus = {
+  QUEUED: 'QUEUED',
+  GENERATING: 'GENERATING',
+  READY: 'READY',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type ArtifactStatus = (typeof ArtifactStatus)[keyof typeof ArtifactStatus]
+
+
+export const ProcessingJobKind = {
+  INGEST_DOCUMENT: 'INGEST_DOCUMENT',
+  GENERATE_OVERVIEW: 'GENERATE_OVERVIEW',
+  GENERATE_STUDY: 'GENERATE_STUDY'
+} as const
+
+export type ProcessingJobKind = (typeof ProcessingJobKind)[keyof typeof ProcessingJobKind]
+
+
+export const ProcessingJobStatus = {
+  QUEUED: 'QUEUED',
+  RUNNING: 'RUNNING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type ProcessingJobStatus = (typeof ProcessingJobStatus)[keyof typeof ProcessingJobStatus]
+
+
 export const MessageRole = {
   USER: 'USER',
   ASSISTANT: 'ASSISTANT'
@@ -30,7 +72,8 @@ export type MessageRole = (typeof MessageRole)[keyof typeof MessageRole]
 export const MessageStatus = {
   STREAMING: 'STREAMING',
   COMPLETED: 'COMPLETED',
-  FAILED: 'FAILED'
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED'
 } as const
 
 export type MessageStatus = (typeof MessageStatus)[keyof typeof MessageStatus]
